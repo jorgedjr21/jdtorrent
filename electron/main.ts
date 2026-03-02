@@ -22,12 +22,14 @@ function saveStored(list: StoredTorrent[]) {
 }
 
 const torrentMeta = new Map<string, { addedAt: number, savePath: string}>()
+const pausedSet = new Set<string>()
 
 function toTorrentInfo(t: any) {
   const progress = t.progress;
   const meta = torrentMeta.get(t.infoHash)
+  const isPaused = pausedSet.has(t.infoHash)
   let status: string
-  if(t.paused) status = 'paused'
+  if(isPaused) status = 'paused'
   else if (progress === 1) status = 'seeding'
   else status = 'downloading'
   return {
@@ -49,7 +51,8 @@ function addTorrentPaused(source: string, savePath: string, addedAt: number): Pr
   return new Promise((resolve, reject) => {
     client.add(source, { path: savePath}, (torrent: any) => {
       torrent.on('error', reject)
-      torrent.pause()
+      torrent.files.forEach( (f: any) => f.deselect());
+      pausedSet.add(torrent.infoHash)
       torrentMeta.set(torrent.infoHash, {addedAt, savePath})
       resolve(toTorrentInfo(torrent))
     })
@@ -58,8 +61,8 @@ function addTorrentPaused(source: string, savePath: string, addedAt: number): Pr
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width: 1920,
+    height: 1080,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -116,13 +119,19 @@ ipcMain.handle('torrent:list', async () => {
 });
 
 ipcMain.handle('torrent:pause', async (_event, infoHash: string) => {
-  const torrent = client.get(infoHash)
-  if(torrent) torrent.pause
+  const torrent = client.torrents.find((t: any) => t.infoHash == infoHash)
+  if(torrent) {
+    torrent.files.forEach((f: any) => f.deselect())
+    pausedSet.add(infoHash)
+  }
 })
 
 ipcMain.handle('torrent:resume', async (_event, infoHash: string) => {
-  const torrent = client.get(infoHash)
-  if (torrent) torrent.resume()
+  const torrent = client.torrents.find((t: any) => t.infoHash == infoHash)
+  if (torrent && torrent.files) {
+    torrent.files.forEach((f: any) => f.select())
+    pausedSet.delete(torrent.infoHash)
+  }
 })
 
 const dynamicImport = new Function('specifier', 'return import(specifier)') as (s: string) => Promise<any>;

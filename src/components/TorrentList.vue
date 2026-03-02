@@ -54,7 +54,7 @@
           v-if="torrent.status === 'paused' || torrent.status === 'downloading'"
           class="button is-small"
           :class="torrent.status === 'paused' ? 'is-success' : 'is-warning'"
-          @click="toggleTorrent(t)"
+          @click="toggleTorrent(torrent)"
         >
           <span class="icon">
             <font-awesome-icon :icon="torrent.status === 'paused' ? 'play' : 'pause'" />

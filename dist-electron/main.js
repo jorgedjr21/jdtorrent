@@ -22,11 +22,13 @@ function saveStored(list) {
     fs_1.default.writeFileSync(getStorePath(), JSON.stringify(list, null, 2));
 }
 const torrentMeta = new Map();
+const pausedSet = new Set();
 function toTorrentInfo(t) {
     const progress = t.progress;
     const meta = torrentMeta.get(t.infoHash);
+    const isPaused = pausedSet.has(t.infoHash);
     let status;
-    if (t.paused)
+    if (isPaused)
         status = 'paused';
     else if (progress === 1)
         status = 'seeding';
@@ -50,7 +52,8 @@ function addTorrentPaused(source, savePath, addedAt) {
     return new Promise((resolve, reject) => {
         client.add(source, { path: savePath }, (torrent) => {
             torrent.on('error', reject);
-            torrent.pause();
+            torrent.files.forEach((f) => f.deselect());
+            pausedSet.add(torrent.infoHash);
             torrentMeta.set(torrent.infoHash, { addedAt, savePath });
             resolve(toTorrentInfo(torrent));
         });
@@ -58,8 +61,8 @@ function addTorrentPaused(source, savePath, addedAt) {
 }
 function createWindow() {
     const win = new electron_1.BrowserWindow({
-        width: 1024,
-        height: 768,
+        width: 1920,
+        height: 1080,
         webPreferences: {
             preload: path_1.default.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -107,14 +110,21 @@ electron_1.ipcMain.handle('torrent:list', async () => {
     return client.torrents.map(toTorrentInfo);
 });
 electron_1.ipcMain.handle('torrent:pause', async (_event, infoHash) => {
-    const torrent = client.get(infoHash);
-    if (torrent)
-        torrent.pause;
+    const torrent = client.torrents.find((t) => t.infoHash == infoHash);
+    if (torrent) {
+        torrent.files.forEach((f) => f.deselect());
+        pausedSet.add(infoHash);
+    }
 });
 electron_1.ipcMain.handle('torrent:resume', async (_event, infoHash) => {
-    const torrent = client.get(infoHash);
-    if (torrent)
-        torrent.resume();
+    const torrent = client.torrents.find((t) => t.infoHash == infoHash);
+    console.log('[resume] infoHash', infoHash);
+    console.log('[resume] torrent encontrado', !!!torrent);
+    console.log('[resume] torrent files', torrent.files);
+    if (torrent && torrent.files) {
+        torrent.files.forEach((f) => f.select());
+        pausedSet.delete(torrent.infoHash);
+    }
 });
 const dynamicImport = new Function('specifier', 'return import(specifier)');
 electron_1.app.whenReady().then(async () => {
