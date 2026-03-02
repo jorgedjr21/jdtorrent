@@ -1,7 +1,7 @@
 
 <template>
   <div class="app-layout">
-    <Sidebar />
+    <Sidebar :torrents="torrents"/>
     <main class="main-content">
       <TorrentList />
     </main>
@@ -9,8 +9,26 @@
 </template>
 
 <script setup lang="ts">
+  import { ref, onMounted, onUnmounted } from 'vue';
   import Sidebar from './components/Sidebar.vue';
   import TorrentList from './components/TorrentList.vue';
+  import type { TorrentInfo } from './types/torrent';
+
+  const torrents = ref<TorrentInfo[]>([])
+  let interval: ReturnType<typeof setInterval>
+
+  async function fetchTorrents() {
+    torrents.value = await window.electronAPI.torrent.list()
+  }
+
+  onMounted(() => {
+    fetchTorrents();
+    interval = setInterval(fetchTorrents, 2000)
+  })
+
+  onUnmounted(() => {
+    clearInterval(interval)
+  })
 </script>
 
 <style>

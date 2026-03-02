@@ -29,17 +29,22 @@
   </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
+  import type { TorrentInfo } from '../types/torrent';
+
+  const props = defineProps<{
+    torrents: TorrentInfo[]
+  }>()
 
   const activeItem = ref('Todos')
 
-  const menuItems = [
-    { icon: 'download', label: 'Todos', count: 0 },
-    { icon: 'play', label: 'Baixando', count: 0 },
-    { icon: 'upload', label: 'Semeando', count: 0 },
-    { icon: 'pause', label: 'Pausados', count: 0 },
-    { icon: 'check', label: 'Concluídos', count: 0 },
-  ]
+  const menuItems = computed(() => [
+    { icon: 'download', label: 'Todos', count: props.torrents.length },
+    { icon: 'play', label: 'Baixando', count: props.torrents.filter( t => t.status === 'downloading').length },
+    { icon: 'upload', label: 'Semeando', count: props.torrents.filter(t => t.status === 'seeding').length },
+    { icon: 'pause', label: 'Pausados', count: props.torrents.filter(t => t.status === 'paused').length },
+    { icon: 'check', label: 'Concluídos', count: props.torrents.filter(t => t.status === 'completed').length },
+  ])
 </script>
 
 <style scoped>

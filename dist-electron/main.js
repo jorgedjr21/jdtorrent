@@ -5,7 +5,57 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const isDev = process.env.NODE_ENV === 'development';
+let client;
+const getStorePath = () => path_1.default.join(electron_1.app.getPath('userData'), 'torrents.json');
+function loadStored() {
+    try {
+        const data = fs_1.default.readFileSync(getStorePath(), 'utf-8');
+        return JSON.parse(data);
+    }
+    catch {
+        return [];
+    }
+}
+function saveStored(list) {
+    fs_1.default.writeFileSync(getStorePath(), JSON.stringify(list, null, 2));
+}
+const torrentMeta = new Map();
+function toTorrentInfo(t) {
+    const progress = t.progress;
+    const meta = torrentMeta.get(t.infoHash);
+    let status;
+    if (t.paused)
+        status = 'paused';
+    else if (progress === 1)
+        status = 'seeding';
+    else
+        status = 'downloading';
+    return {
+        infoHash: t.infoHash,
+        name: t.name,
+        totalSize: t.length,
+        progress,
+        downloadSpeed: t.downloadSpeed,
+        uploadSpeed: t.uploadSpeed,
+        numPeers: t.numPeers,
+        status,
+        files: t.files.map((f) => ({ name: f.name, path: f.path, length: f.length })),
+        addedAt: meta?.addedAt ?? Date.now(),
+        timeRemaining: t.timeRemaining,
+    };
+}
+function addTorrentPaused(source, savePath, addedAt) {
+    return new Promise((resolve, reject) => {
+        client.add(source, { path: savePath }, (torrent) => {
+            torrent.on('error', reject);
+            torrent.pause();
+            torrentMeta.set(torrent.infoHash, { addedAt, savePath });
+            resolve(toTorrentInfo(torrent));
+        });
+    });
+}
 function createWindow() {
     const win = new electron_1.BrowserWindow({
         width: 1024,
@@ -18,14 +68,68 @@ function createWindow() {
     });
     if (isDev) {
         win.loadURL('http://localhost:5173');
-        win.webContents.openDevTools();
+        win.webContents.on('did-finish-load', () => {
+            win.webContents.openDevTools();
+        });
     }
     else {
         win.loadFile(path_1.default.join(__dirname, '../dist/index.html'));
     }
 }
-electron_1.app.whenReady().then(createWindow);
+electron_1.ipcMain.handle('torrent:choose-folder', async () => {
+    const result = await electron_1.dialog.showOpenDialog({ properties: ['openDirectory'] });
+    return result.canceled ? null : result.filePaths[0];
+});
+electron_1.ipcMain.handle('torrent:add-file', async (_event, savePath) => {
+    const result = await electron_1.dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{ name: 'Torrent', extensions: ['torrent'] }],
+    });
+    if (result.canceled || result.filePaths.length === 0)
+        return null;
+    const addedAt = Date.now();
+    const info = await addTorrentPaused(result.filePaths[0], savePath || electron_1.app.getPath('downloads'), addedAt);
+    const torrent = client.get(info.infoHash);
+    const stored = loadStored();
+    stored.push({ magnetURI: torrent.magnetURI, savePath: savePath || electron_1.app.getPath('downloads'), addedAt });
+    saveStored(stored);
+    return info;
+});
+electron_1.ipcMain.handle('torrent:add-magnet', async (_event, uri, savePath) => {
+    const addedAt = Date.now();
+    const info = await addTorrentPaused(uri, savePath || electron_1.app.getPath('downloads'), addedAt);
+    const stored = loadStored();
+    stored.push({ magnetURI: uri, savePath: savePath || electron_1.app.getPath('downloads'), addedAt });
+    saveStored(stored);
+    return info;
+});
+electron_1.ipcMain.handle('torrent:list', async () => {
+    return client.torrents.map(toTorrentInfo);
+});
+electron_1.ipcMain.handle('torrent:pause', async (_event, infoHash) => {
+    const torrent = client.get(infoHash);
+    if (torrent)
+        torrent.pause;
+});
+electron_1.ipcMain.handle('torrent:resume', async (_event, infoHash) => {
+    const torrent = client.get(infoHash);
+    if (torrent)
+        torrent.resume();
+});
+const dynamicImport = new Function('specifier', 'return import(specifier)');
+electron_1.app.whenReady().then(async () => {
+    const { default: WebTorrent } = await dynamicImport('webtorrent');
+    client = new WebTorrent();
+    const stored = loadStored();
+    for (const entry of stored) {
+        try {
+            await addTorrentPaused(entry.magnetURI, entry.savePath, entry.addedAt);
+        }
+        catch { }
+    }
+    createWindow();
+});
 electron_1.app.on('window-all-closed', () => {
     if (process.platform !== 'darwin')
-        electron_1.app.quit;
+        electron_1.app.quit();
 });
