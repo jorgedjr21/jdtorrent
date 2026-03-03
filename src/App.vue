@@ -1,9 +1,10 @@
 
 <template>
   <div class="app-layout">
-    <Sidebar :torrents="torrents"/>
+    <Sidebar :torrents="torrents", :active-item="activeItem" @navigate="onNavigate"/>
     <main class="main-content">
-      <TorrentList />
+      <TorrentList v-if="currentView ==='torrents'"/>
+      <Settings v-else/>
     </main>
   </div>
 </template>
@@ -12,13 +13,21 @@
   import { ref, onMounted, onUnmounted } from 'vue';
   import Sidebar from './components/Sidebar.vue';
   import TorrentList from './components/TorrentList.vue';
+  import Settings from './components/Settings.vue'
   import type { TorrentInfo } from './types/torrent';
 
   const torrents = ref<TorrentInfo[]>([])
+  const activeItem = ref('Todos')
+  const currentView = ref<'torrents' | 'settings'>('torrents')
   let interval: ReturnType<typeof setInterval>
 
   async function fetchTorrents() {
     torrents.value = await window.electronAPI.torrent.list()
+  }
+
+  async function onNavigate(label: string) {
+    activeItem.value = label
+    currentView.value = label === 'Configurações' ? 'settings' : 'torrents'
   }
 
   onMounted(() => {

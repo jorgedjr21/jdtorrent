@@ -12,7 +12,7 @@
           <li v-for="item in menuItems" :key="item.label">
             <a
               :class="{ 'is-active': activeItem === item.label }"
-              @click="activeItem = item.label"
+              @click="$emit('navigate', item.label)"
             >
               <span class="icon-text">
                 <span class="icon">
@@ -25,18 +25,35 @@
           </li>
         </ul>
       </nav>
+
+      <div class="settings-item mt-auto">
+        <a
+          :class="{ 'is-active': activeItem === 'Configurações'}"
+          @click="$emit('navigate', 'Configurações')"
+        >
+          <span class="icon-text">
+            <span class="icon">
+              <font-awesome-icon icon="gear"/>
+            </span>
+            <span>Configurações</span>
+          </span>
+        </a>
+      </div>
     </aside>
   </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { computed } from 'vue'
   import type { TorrentInfo } from '../types/torrent';
 
   const props = defineProps<{
-    torrents: TorrentInfo[]
+    torrents: TorrentInfo[],
+    activeItem: string
   }>()
 
-  const activeItem = ref('Todos')
+  defineEmits<{
+    navigate: [label: string]
+  }>()
 
   const menuItems = computed(() => [
     { icon: 'download', label: 'Todos', count: props.torrents.length },
@@ -64,19 +81,28 @@
   }
 
   /* sobrescreve o tema claro do Bulma menu para o fundo escuro */
-  .menu .menu-list a {
+  .menu .menu-list a, .settings-item a {
     color: #b0b0c0;
     border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0.5em 0.75em;
+    cursor: pointer;
   }
 
-  .menu .menu-list a:hover {
+  .menu .menu-list a:hover, .settings-item a:hover {
     background-color: #2e2e4e;
     color: #fff;
   }
 
-  .menu .menu-list a.is-active {
+  .menu .menu-list a.is-active, .settings-item a.is-active {
     background-color: #2e2e4e;
     color: #fff;
     border-left: 3px solid #3498db;
+  }
+
+  .settings-item {  
+    border-top: 1px solid #2e2e4e;
+    padding-top: 0.75rem;
   }
 </style>

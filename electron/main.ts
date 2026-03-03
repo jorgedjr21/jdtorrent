@@ -5,20 +5,34 @@ import fs from 'fs';
 const isDev = process.env.NODE_ENV === 'development';
 let client: any;
 
-const getStorePath = () => path.join(app.getPath('userData'), 'torrents.json')
+const getTorrentsStorePath = () => path.join(app.getPath('userData'), 'torrents.json')
+const getSettingsPath = () => path.join(app.getPath('appData'), 'settings.json')
 type StoredTorrent = { magnetURI: string; savePath: string; addedAt: number }
+type AppSettings = { downloadPath: string }
 
-function loadStored(): StoredTorrent[] {
+function loadStoredTorrents(): StoredTorrent[] {
   try {
-    const data = fs.readFileSync(getStorePath(), 'utf-8')
+    const data = fs.readFileSync(getTorrentsStorePath(), 'utf-8')
     return JSON.parse(data)
   } catch {
     return []
   }
 }
 
-function saveStored(list: StoredTorrent[]) {
-  fs.writeFileSync(getStorePath(), JSON.stringify(list, null, 2))
+function saveStoredTorrents(list: StoredTorrent[]) {
+  fs.writeFileSync(getTorrentsStorePath(), JSON.stringify(list, null, 2))
+}
+
+function loadSettings(): AppSettings {
+  try {
+    return JSON.parse(fs.readFileSync(getSettingsPath(), 'utf-8'))
+  } catch {
+    return { downloadPath: app.getPath('downloads') }
+  }
+}
+
+function saveSettings(s: AppSettings) {
+  fs.writeFileSync(getSettingsPath(), JSON.stringify(s, null, 2))
 }
 
 const torrentMeta = new Map<string, { addedAt: number, savePath: string}>()
@@ -80,7 +94,10 @@ function createWindow() {
   }
 }
 
-ipcMain.handle('torrent:choose-folder', async () => {
+ipcMain.handle('settings:get', async () => loadSettings())
+ipcMain.handle('settings:set', async (_event, s: AppSettings ) => saveSettings(s))
+
+ipcMain.handle('settings:choose-folder', async () => {
   const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
   return result.canceled ? null : result.filePaths[0];
 });
@@ -93,23 +110,23 @@ ipcMain.handle('torrent:add-file', async (_event, savePath: string) => {
   if (result.canceled || result.filePaths.length === 0) return null
 
   const addedAt = Date.now()
-  const info = await addTorrentPaused(result.filePaths[0], savePath || app.getPath('downloads'),addedAt)
+  const info = await addTorrentPaused(result.filePaths[0], savePath || loadSettings().downloadPath, addedAt)
 
   const torrent = client.get(info.infoHash)
-  const stored = loadStored()
-  stored.push({ magnetURI: torrent.magnetURI, savePath: savePath || app.getPath('downloads'), addedAt})
-  saveStored(stored)
+  const stored = loadStoredTorrents()
+  stored.push({ magnetURI: torrent.magnetURI, savePath: savePath || loadSettings().downloadPath, addedAt})
+  saveStoredTorrents(stored)
 
   return info
 });
 
 ipcMain.handle('torrent:add-magnet', async (_event, uri: string, savePath: string) => {
   const addedAt = Date.now()
-  const info = await addTorrentPaused(uri, savePath || app.getPath('downloads'), addedAt)
+  const info = await addTorrentPaused(uri, savePath || loadSettings().downloadPath, addedAt)
 
-  const stored = loadStored()
-  stored.push({ magnetURI: uri, savePath: savePath || app.getPath('downloads'), addedAt })
-  saveStored(stored)
+  const stored = loadStoredTorrents()
+  stored.push({ magnetURI: uri, savePath: savePath || loadSettings().downloadPath, addedAt })
+  saveStoredTorrents(stored)
 
   return info
 });
@@ -140,7 +157,7 @@ app.whenReady().then(async () => {
   const { default: WebTorrent } = await dynamicImport('webtorrent');
   client = new WebTorrent();
 
-  const stored = loadStored()
+  const stored = loadStoredTorrents()
   for(const entry of stored) {
     try {
       await addTorrentPaused(entry.magnetURI, entry.savePath, entry.addedAt)

@@ -11,6 +11,11 @@ try {
             list: () => electron_1.ipcRenderer.invoke('torrent:list'),
             pause: (infoHash) => electron_1.ipcRenderer.invoke('torrent:pause', infoHash),
             resume: (infoHash) => electron_1.ipcRenderer.invoke('torrent:resume', infoHash)
+        },
+        settings: {
+            get: () => electron_1.ipcRenderer.invoke('settings:get'),
+            set: (s) => electron_1.ipcRenderer.invoke('settings:set', s),
+            chooseFolder: () => electron_1.ipcRenderer.invoke('settings:choose-folder')
         }
     });
     console.log('preload OK, ipcRenderer:', typeof electron_1.ipcRenderer);

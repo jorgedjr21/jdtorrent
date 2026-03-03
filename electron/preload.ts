@@ -10,6 +10,11 @@ import { contextBridge, ipcRenderer } from 'electron';
         list: () => ipcRenderer.invoke('torrent:list'),
         pause: (infoHash: string) => ipcRenderer.invoke('torrent:pause', infoHash),
         resume: (infoHash: string) => ipcRenderer.invoke('torrent:resume', infoHash)
+      },
+      settings: {
+        get: () => ipcRenderer.invoke('settings:get'),
+        set: (s: { downloadPath: string}) => ipcRenderer.invoke('settings:set', s),
+        chooseFolder: () => ipcRenderer.invoke('settings:choose-folder')
       }
     });
     console.log('preload OK, ipcRenderer:', typeof ipcRenderer);

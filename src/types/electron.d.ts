@@ -11,6 +11,11 @@ declare global {
         list: () => Promise<TorrentInfo[]>
         pause: (infoHash: string) => Promise<void>
         resume: (infoHash: string) => Promise<void>
+      },
+      settings: {
+        get: () => Promise<{downloadPath: string}>,
+        set: (s: {downloadPath: string}) => Promise<void>,
+        chooseFolder: () => Promise<string | null>
       }
     }
   }

@@ -8,18 +8,30 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const isDev = process.env.NODE_ENV === 'development';
 let client;
-const getStorePath = () => path_1.default.join(electron_1.app.getPath('userData'), 'torrents.json');
-function loadStored() {
+const getTorrentsStorePath = () => path_1.default.join(electron_1.app.getPath('userData'), 'torrents.json');
+const getSettingsPath = () => path_1.default.join(electron_1.app.getPath('appData'), 'settings.json');
+function loadStoredTorrents() {
     try {
-        const data = fs_1.default.readFileSync(getStorePath(), 'utf-8');
+        const data = fs_1.default.readFileSync(getTorrentsStorePath(), 'utf-8');
         return JSON.parse(data);
     }
     catch {
         return [];
     }
 }
-function saveStored(list) {
-    fs_1.default.writeFileSync(getStorePath(), JSON.stringify(list, null, 2));
+function saveStoredTorrents(list) {
+    fs_1.default.writeFileSync(getTorrentsStorePath(), JSON.stringify(list, null, 2));
+}
+function loadSettings() {
+    try {
+        return JSON.parse(fs_1.default.readFileSync(getSettingsPath(), 'utf-8'));
+    }
+    catch {
+        return { downloadPath: electron_1.app.getPath('downloads') };
+    }
+}
+function saveSettings(s) {
+    fs_1.default.writeFileSync(getSettingsPath(), JSON.stringify(s, null, 2));
 }
 const torrentMeta = new Map();
 const pausedSet = new Set();
@@ -79,7 +91,9 @@ function createWindow() {
         win.loadFile(path_1.default.join(__dirname, '../dist/index.html'));
     }
 }
-electron_1.ipcMain.handle('torrent:choose-folder', async () => {
+electron_1.ipcMain.handle('settings:get', async () => loadSettings());
+electron_1.ipcMain.handle('settings:set', async (_event, s) => saveSettings(s));
+electron_1.ipcMain.handle('settings:choose-folder', async () => {
     const result = await electron_1.dialog.showOpenDialog({ properties: ['openDirectory'] });
     return result.canceled ? null : result.filePaths[0];
 });
@@ -91,19 +105,19 @@ electron_1.ipcMain.handle('torrent:add-file', async (_event, savePath) => {
     if (result.canceled || result.filePaths.length === 0)
         return null;
     const addedAt = Date.now();
-    const info = await addTorrentPaused(result.filePaths[0], savePath || electron_1.app.getPath('downloads'), addedAt);
+    const info = await addTorrentPaused(result.filePaths[0], savePath || loadSettings().downloadPath, addedAt);
     const torrent = client.get(info.infoHash);
-    const stored = loadStored();
-    stored.push({ magnetURI: torrent.magnetURI, savePath: savePath || electron_1.app.getPath('downloads'), addedAt });
-    saveStored(stored);
+    const stored = loadStoredTorrents();
+    stored.push({ magnetURI: torrent.magnetURI, savePath: savePath || loadSettings().downloadPath, addedAt });
+    saveStoredTorrents(stored);
     return info;
 });
 electron_1.ipcMain.handle('torrent:add-magnet', async (_event, uri, savePath) => {
     const addedAt = Date.now();
-    const info = await addTorrentPaused(uri, savePath || electron_1.app.getPath('downloads'), addedAt);
-    const stored = loadStored();
-    stored.push({ magnetURI: uri, savePath: savePath || electron_1.app.getPath('downloads'), addedAt });
-    saveStored(stored);
+    const info = await addTorrentPaused(uri, savePath || loadSettings().downloadPath, addedAt);
+    const stored = loadStoredTorrents();
+    stored.push({ magnetURI: uri, savePath: savePath || loadSettings().downloadPath, addedAt });
+    saveStoredTorrents(stored);
     return info;
 });
 electron_1.ipcMain.handle('torrent:list', async () => {
@@ -118,9 +132,6 @@ electron_1.ipcMain.handle('torrent:pause', async (_event, infoHash) => {
 });
 electron_1.ipcMain.handle('torrent:resume', async (_event, infoHash) => {
     const torrent = client.torrents.find((t) => t.infoHash == infoHash);
-    console.log('[resume] infoHash', infoHash);
-    console.log('[resume] torrent encontrado', !!!torrent);
-    console.log('[resume] torrent files', torrent.files);
     if (torrent && torrent.files) {
         torrent.files.forEach((f) => f.select());
         pausedSet.delete(torrent.infoHash);
@@ -130,7 +141,7 @@ const dynamicImport = new Function('specifier', 'return import(specifier)');
 electron_1.app.whenReady().then(async () => {
     const { default: WebTorrent } = await dynamicImport('webtorrent');
     client = new WebTorrent();
-    const stored = loadStored();
+    const stored = loadStoredTorrents();
     for (const entry of stored) {
         try {
             await addTorrentPaused(entry.magnetURI, entry.savePath, entry.addedAt);
