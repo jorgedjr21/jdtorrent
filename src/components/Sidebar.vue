@@ -1,67 +1,37 @@
 <template>
-    <aside class="sidebar p-4">
-      <div class="brand mb-5">
-        <span class="icon has-text-primary mr-2">
-          <font-awesome-icon icon="download" size="lg" />
-        </span>
-        <span class="has-text-white has-text-weight-bold is-size-5">JDTorrent</span>
-      </div>
+  <aside class="sidebar p-4">
+    <div class="brand mb-5">
+      <span class="icon has-text-primary mr-2">
+        <font-awesome-icon icon="download" size="lg" />
+      </span>
+      <span class="has-text-white has-text-weight-bold is-size-5">JDTorrent</span>
+    </div>
 
-      <nav class="menu">
-        <ul class="menu-list">
-          <li v-for="item in menuItems" :key="item.label">
-            <a
-              :class="{ 'is-active': activeItem === item.label }"
-              @click="$emit('navigate', item.label)"
-            >
-              <span class="icon-text">
-                <span class="icon">
-                  <font-awesome-icon :icon="item.icon" />
-                </span>
-                <span>{{ item.label }}</span>
-              </span>
-              <span class="tag is-rounded ml-1">{{ item.count }}</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-
-      <div class="settings-item mt-auto">
-        <a
-          :class="{ 'is-active': activeItem === 'Configurações'}"
-          @click="$emit('navigate', 'Configurações')"
-        >
-          <span class="icon-text">
-            <span class="icon">
-              <font-awesome-icon icon="gear"/>
+    <nav class="menu">
+      <ul class="menu-list">
+        <li>
+          <router-link to="/torrents" active-class="is-active">
+            <span class="icon-text">
+              <span class="icon"><font-awesome-icon icon="download" /></span>
+              <span>Torrents</span>
             </span>
-            <span>Configurações</span>
-          </span>
-        </a>
-      </div>
-    </aside>
-  </template>
+          </router-link>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="settings-item mt-auto">
+      <router-link to="/settings" active-class="is-active">
+        <span class="icon-text">
+          <span class="icon"><font-awesome-icon icon="gear" /></span>
+          <span>Configurações</span>
+        </span>
+      </router-link>
+    </div>
+  </aside>
+</template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
-  import type { TorrentInfo } from '../types/torrent';
-
-  const props = defineProps<{
-    torrents: TorrentInfo[],
-    activeItem: string
-  }>()
-
-  defineEmits<{
-    navigate: [label: string]
-  }>()
-
-  const menuItems = computed(() => [
-    { icon: 'download', label: 'Todos', count: props.torrents.length },
-    { icon: 'play', label: 'Baixando', count: props.torrents.filter( t => t.status === 'downloading').length },
-    { icon: 'upload', label: 'Semeando', count: props.torrents.filter(t => t.status === 'seeding').length },
-    { icon: 'pause', label: 'Pausados', count: props.torrents.filter(t => t.status === 'paused').length },
-    { icon: 'check', label: 'Concluídos', count: props.torrents.filter(t => t.status === 'completed').length },
-  ])
 </script>
 
 <style scoped>
@@ -82,12 +52,13 @@
 
   /* sobrescreve o tema claro do Bulma menu para o fundo escuro */
   .menu .menu-list a, .settings-item a {
-    color: #b0b0c0;
+    color: #fff;
     border-radius: 6px;
     display: flex;
     align-items: center;
     padding: 0.5em 0.75em;
     cursor: pointer;
+    background-color: #2e2e4e;
   }
 
   .menu .menu-list a:hover, .settings-item a:hover {
@@ -99,6 +70,7 @@
     background-color: #2e2e4e;
     color: #fff;
     border-left: 3px solid #3498db;
+    border-bottom: 3px solid #3498db;
   }
 
   .settings-item {  

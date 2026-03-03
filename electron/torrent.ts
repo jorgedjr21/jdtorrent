@@ -4,7 +4,16 @@ import fs from 'fs'
 
 import { loadSettings } from "./settings";
 
-type StoredTorrent = { magnetURI: string, savePath: string, addedAt: number}
+type StoredTorrent = { 
+  magnetURI: string 
+  savePath: string 
+  addedAt: number
+  infoHash: string
+  name: string
+  totalSize: number
+  files: { name: string, path: string, length: number}[]
+  progress: number
+}
 
 let client: any
 
@@ -22,8 +31,9 @@ function saveStoredTorrents(list: StoredTorrent[]) {
   fs.writeFileSync(getTorrentsStorePath(), JSON.stringify(list,null, 2))
 }
 
-const torrentMeta = new Map<string, StoredTorrent>()
+const torrentMeta = new Map<string, {magnetURI: string, savePath: string, addedAt: number}>()
 const pausedSet = new Set<string>()
+const pausedTorrentsInfo = new Map<string, any>()
 
 function toTorrentInfo(t: any) {
   const progress = t.progress
@@ -38,13 +48,13 @@ function toTorrentInfo(t: any) {
     name: t.name,
     totalSize: t.length,
     progress,
-    downloadSpeed: t.downloadSpeed,
-    uploadSpeed: t.uploadSpeed,
-    numPeers: t.numPeers,
+    downloadSpeed: isPaused ? 0 : t.downloadSpeed,
+    uploadSpeed: isPaused ? 0 : t.uploadSpeed,
+    numPeers: isPaused ? 0 : t.numPeers,
     status,
     files: t.files.map((f: any) => ({ name: f.name, path: f.path, length: f.length })),
     addedAt: meta?.addedAt ?? Date.now(),
-    timeRemaining: t.timeRemaining,
+    timeRemaining: isPaused ? 0 :t.timeRemaining,
   }
 }
 
@@ -52,10 +62,12 @@ function addTorrentPaused(source: string, savePath: string, addedAt: number): Pr
   return new Promise((resolve, reject) => {
     client.add(source, { path: savePath }, (torrent: any) => {
       torrent.on('error', reject)
-      torrent.pause()
-      pausedSet.add(torrent.infoHash)
-      torrentMeta.set(torrent.infoHash, { addedAt, savePath, magnetURI: torrent.magnetURI })
-      resolve(toTorrentInfo(torrent))
+      const { infoHash, magnetURI } = torrent
+      torrentMeta.set(infoHash, {magnetURI, savePath, addedAt})
+      pausedSet.add(infoHash)
+      const info = toTorrentInfo(torrent)
+      pausedTorrentsInfo.set(infoHash, info)
+      torrent.destroy({destroyStore: false}, () => resolve(info))
     })
   })
 }
@@ -74,7 +86,16 @@ export function registerTorrentHandlers() {
 
     const meta = torrentMeta.get(info.infoHash)!
     const stored = loadStoredTorrents()
-    stored.push({ magnetURI: meta.magnetURI, savePath: resolvedPath, addedAt })
+    stored.push({ 
+      magnetURI: meta.magnetURI, 
+      savePath: resolvedPath, 
+      addedAt,
+      infoHash: info.infoHash,
+      name: info.name,
+      totalSize: info.totalSize,
+      files: info.files,
+      progress: info.progress 
+    })
     saveStoredTorrents(stored)
 
     return info
@@ -86,29 +107,58 @@ export function registerTorrentHandlers() {
     const info = await addTorrentPaused(uri, resolvedPath, addedAt)
 
     const stored = loadStoredTorrents()
-    stored.push({ magnetURI: uri, savePath: resolvedPath, addedAt })
+    stored.push({ 
+      magnetURI: uri, 
+      savePath: resolvedPath, 
+      addedAt,
+      infoHash: info.infoHash,
+      name: info.name,
+      totalSize: info.totalSize,
+      files: info.files,
+      progress: info.progress 
+    })
     saveStoredTorrents(stored)
 
     return info
   })
 
   ipcMain.handle('torrent:list', async () => {
-    return client.torrents.map(toTorrentInfo)
+   const active = client.torrents.map(toTorrentInfo)
+   const paused = Array.from(pausedTorrentsInfo.values())
+   return [...active, ...paused]
   })
 
   ipcMain.handle('torrent:pause', async (_event, infoHash: string) => {
     const torrent = client.torrents.find((t: any) => t.infoHash === infoHash)
     if (torrent) {
-      torrent.pause()
       pausedSet.add(infoHash)
+      const info = {
+        ...toTorrentInfo(torrent),
+        downloadSpeed: 0,
+        uploadSpeed: 0,
+        numPeers: 0,
+        timeRemaining: 0
+      }
+      pausedTorrentsInfo.set(infoHash, info)
+      torrent.destroy({destroyStore: false})
+      const stored = loadStoredTorrents()
+      const idx = stored.findIndex(s => s.infoHash == infoHash)
+      if(idx >= 0) {
+        stored[idx].progress = info.progress
+        saveStoredTorrents(stored)
+      }
     }
   })
 
   ipcMain.handle('torrent:resume', async (_event, infoHash: string) => {
-    const torrent = client.torrents.find((t: any) => t.infoHash === infoHash)
-    if (torrent) {
-      torrent.resume()
+    const meta = torrentMeta.get(infoHash)
+    if(meta) {
       pausedSet.delete(infoHash)
+      pausedTorrentsInfo.delete(infoHash)
+      const alreadyActive = client.torrents.find((t: any) => t.infoHash === infoHash)
+      if (!alreadyActive) {
+        client.add(meta.magnetURI, { path: meta.savePath })
+      }
     }
   })
 }
@@ -120,10 +170,25 @@ export async function initTorrentClient() {
   const { default: WebTorrent } = await dynamicImport('webtorrent')
   client = new WebTorrent()
 
-  const stored = loadStoredTorrents()
-  for (const entry of stored) {
-    try {
-      await addTorrentPaused(entry.magnetURI, entry.savePath, entry.addedAt)
-    } catch {}
+  for(const entry of loadStoredTorrents()) {
+    pausedSet.add(entry.infoHash)
+    torrentMeta.set(entry.infoHash, {
+      magnetURI: entry.magnetURI,
+      savePath: entry.savePath,
+      addedAt: entry.addedAt
+    })
+    pausedTorrentsInfo.set(entry.infoHash, {
+      infoHash: entry.infoHash,
+      name: entry.name,
+      totalSize: entry.totalSize,
+      progress: entry.progress,
+      downloadSpeed: 0,
+      uploadSpeed: 0,
+      numPeers: 0,
+      status: 'paused',
+      files: entry.files,
+      addedAt: entry.addedAt,
+      timeRemaining: 0
+    })
   }
 }

@@ -20,9 +20,11 @@
         </div>
 
         <div v-if="tab === 'file'">
-          <p class="has-text-grey mb-4">
-            Selecione um arquivo <code>.torrent</code> no seu computador
-          </p>
+          <p class="has-text-grey mb-3">Selecione um arquivo <code>.torrent</code> do seu computador</p>
+          <button class="button is-info" @click="submit()">
+            <span class="icon"><font-awesome-icon icon="folder-open" /></span>
+            <span>Escolher arquivo .torrent</span>
+          </button>
         </div>
 
         <div v-if="tab === 'magnet'">
@@ -40,22 +42,28 @@
         </div>
 
         <div class="field mt-4">
-          <label for="savePath">Pasta destino</label>
-          <input type="text" class="input" readonly :value="downloadPath">
+          <label class="label is-small has-text-grey">
+            <font-awesome-icon icon="folder" class="mr-1"/>
+            Pasta de download
+            <span class="has-text-grey-light is-size-7">(alterar em Configurações)</span>
+          </label>
+          <input class="input has-background-light" style="cursor: default; color: #666;"
+            type="text" readonly :value="downloadPath" />
         </div>
 
         <p v-if="error" class="has-text-danger mt-3">{{ error }}</p>
       </section>
 
       <footer class="modal-card-foot">
-        <button 
+        <button
+          v-if="tab === 'magnet'"
           class="button is-primary"
           :class="{'is-loading': loading}"
-          :disabled="tab === 'magnet' && !magnetUri"
+          :disabled="!magnetUri"
           @click="submit">
           Adicionar
         </button>
-        <button class="button" @click="$emit('close')">Cancelar</button>
+        <button class="button ml-2" @click="$emit('close')">Cancelar</button>
       </footer>
     </div>
   </div>
