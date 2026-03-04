@@ -4,7 +4,6 @@ import { contextBridge, ipcRenderer } from 'electron';
     contextBridge.exposeInMainWorld('electronAPI', {
       platform: process.platform,
       torrent: {
-        chooseFolder: () => ipcRenderer.invoke('torrent:choose-folder'),
         addFile: (savePath: string) => ipcRenderer.invoke('torrent:add-file', savePath),
         addMagnet: (uri: string, savePath: string) => ipcRenderer.invoke('torrent:add-magnet', uri,savePath),
         list: () => ipcRenderer.invoke('torrent:list'),

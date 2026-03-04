@@ -23,7 +23,7 @@
           <a @click="filter = 'paused'">Pausado ({{ count('paused') }})</a>
         </li>
         <li :class="{'is-active': filter === 'completed'}">
-          <a @click="filter = 'completado'">Completado ({{ count('completed') }})</a>
+          <a @click="filter = 'completed'">Completado ({{ count('completed') }})</a>
         </li>
       </ul>
     </div>
@@ -35,7 +35,7 @@
       <p class="is-size-4 has-text-grey mt-3">Nenhum torrent aqui</p>
     </div>
 
-    <div v-for="torrent in filteredTorrents" :key="torrent.infoHash" class="box mb-3">
+    <div v-for="torrent in filteredTorrents" :key="torrent.infoHash" class="box mb-3" >
       <div class="is-flex is-justify-content-space-between is-align-items-center mb-3">
         <span class="has-text-weight-semibold">{{ torrent.name }}</span>
         <span class="tag ml-2" :class="statusClass(torrent.status)"> {{ statusLabel(torrent.status) }} </span>
@@ -70,7 +70,11 @@
         <button
           v-if="torrent.status === 'paused' || torrent.status === 'downloading'"
           class="button is-small"
-          :class="torrent.status === 'paused' ? 'is-success' : 'is-warning'"
+          :class="[
+            torrent.status === 'paused' ? 'is-success' : 'is-warning',
+            { 'is-loading': transitioning.includes(torrent.infoHash) }
+          ]"
+          :disabled="transitioning.includes(torrent.infoHash)"
           @click="toggleTorrent(torrent)"
         >
           <span class="icon">
@@ -114,6 +118,7 @@
   const torrents = ref<TorrentInfo[]>([])
   const showModal = ref(false)
   const filter = ref<Filter>('all')
+  const transitioning = ref<string[]>([])
   let interval: ReturnType<typeof setInterval>
 
   const filteredTorrents = computed(() => {
@@ -130,13 +135,17 @@
   }
 
   async function toggleTorrent(torrent: TorrentInfo) {
-    if(torrent.status === 'paused') {
-      await window.electronAPI.torrent.resume(torrent.infoHash)
-    }else {
-      await window.electronAPI.torrent.pause(torrent.infoHash)
+    transitioning.value.push(torrent.infoHash)
+    try {
+      if(torrent.status === 'paused') {
+        await window.electronAPI.torrent.resume(torrent.infoHash)
+      }else {
+        await window.electronAPI.torrent.pause(torrent.infoHash)
+      }
+      await fetchTorrents()
+    } finally {
+      transitioning.value = transitioning.value.filter( h => h !== torrent.infoHash)
     }
-
-    await fetchTorrents()
   }
 
   function statusLabel(status: TorrentInfo['status']) {
