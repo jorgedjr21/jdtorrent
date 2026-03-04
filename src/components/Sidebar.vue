@@ -17,6 +17,14 @@
             </span>
           </router-link>
         </li>
+        <li>
+          <router-link to="/movies" active-class="is-active">
+            <span class="icon-text">
+              <span class="icon"><font-awesome-icon icon="film" /></span>
+              <span>Filmes</span>
+            </span>
+          </router-link>
+        </li>
       </ul>
     </nav>
 

@@ -9,6 +9,7 @@ const router = createRouter({
     { path: '/', redirect: '/torrents' },
     { path: '/torrents', component: { template: '<div/>' } },
     { path: '/settings', component: { template: '<div/>' } },
+    { path: '/movies', component: { template: '<div/>' } },
   ]
 })
 
@@ -22,8 +23,15 @@ describe('Sidebar', () => {
 
   it('shows a link for settings', async () => {
     const wrapper = mount(Sidebar, { global: { plugins: [router], stubs: { FontAwesomeIcon: true } }
-})
+  })
     await router.isReady()
     expect(wrapper.html()).toContain('/settings')
+  })
+
+  it('shows a link for movies', async () => {
+    const wrapper = mount(Sidebar, { global: { plugins: [router], stubs: { FontAwesomeIcon: true } }
+  })
+    await router.isReady()
+    expect(wrapper.html()).toContain('/movies')
   })
 })

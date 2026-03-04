@@ -13,8 +13,8 @@ declare global {
         resume: (infoHash: string) => Promise<void>
       },
       settings: {
-        get: () => Promise<{downloadPath: string}>,
-        set: (s: {downloadPath: string}) => Promise<void>,
+        get: () => Promise<{downloadPath: string, ytsApiUrl: string}>,
+        set: (s: {downloadPath: string, ytsApiUrl: string}) => Promise<void>,
         chooseFolder: () => Promise<string | null>
       }
     }

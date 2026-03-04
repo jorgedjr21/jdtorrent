@@ -3,7 +3,7 @@
     <h1 class="title is-5-mb-5">Configurações</h1>
 
     <div class="box">
-      <h2 class="subtitle is-6 mb-3">Pasta de download padrão</h2>
+      <label class="label">Pasta de download padrão</label>
 
       <div class="field has-addons">
         <div class="control is-expanded">
@@ -11,6 +11,13 @@
         </div>
         <div class="control">
           <button class="button" @click="chooseFolder">Escolher pasta</button>
+        </div>
+      </div>
+
+      <div class="field mt-4">
+        <label class="label">URL da API YTS</label>
+        <div class="control">
+          <input class="input" type="text" v-model="ytsApiUrl" />
         </div>
       </div>
 
@@ -28,11 +35,13 @@
   import { ref, onMounted } from 'vue'
 
   const downloadPath = ref('')
+  const ytsApiUrl = ref('')
   const saved = ref(false)
 
   onMounted(async () => {
     const s = await window.electronAPI.settings.get()
     downloadPath.value = s.downloadPath
+    ytsApiUrl.value = s.ytsApiUrl
   })
 
   async function chooseFolder() {
@@ -44,7 +53,7 @@
   }
 
   async function save() {
-    await window.electronAPI.settings.set({ downloadPath: downloadPath.value})
+    await window.electronAPI.settings.set({ downloadPath: downloadPath.value, ytsApiUrl: ytsApiUrl.value})
     saved.value = true
     setTimeout(() => { saved.value = false}, 3000)
   }
