@@ -10,7 +10,7 @@ window.electronAPI = {
     resume: vi.fn().mockResolvedValue(undefined),
   },
   settings: {
-    get: vi.fn().mockResolvedValue({ downloadPath: '/downloads' }),
+    get: vi.fn().mockResolvedValue({ downloadPath: '/downloads' , ytsApiUrl: 'http://fake-api'}),
     set: vi.fn().mockResolvedValue(undefined),
     chooseFolder: vi.fn().mockResolvedValue('/novo/caminho'),
   }
