@@ -31,7 +31,7 @@ function saveStoredTorrents(list: StoredTorrent[]) {
   fs.writeFileSync(getTorrentsStorePath(), JSON.stringify(list,null, 2))
 }
 
-const torrentMeta = new Map<string, {
+export const torrentMeta = new Map<string, {
   magnetURI: string
   savePath: string
   addedAt: number
@@ -40,10 +40,10 @@ const torrentMeta = new Map<string, {
   files?: { name:string, path: string, length: number }[]
   progress?: number
 }>()
-const pausedSet = new Set<string>()
-const pausedTorrentsInfo = new Map<string, any>()
+export const pausedSet = new Set<string>()
+export const pausedTorrentsInfo = new Map<string, any>()
 
-function toTorrentInfo(t: any) {
+export function toTorrentInfo(t: any) {
   const meta = torrentMeta.get(t.infoHash)
   const isPaused = pausedSet.has(t.infoHash)
   let status: string

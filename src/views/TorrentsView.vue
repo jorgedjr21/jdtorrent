@@ -112,6 +112,7 @@
   import {ref, computed, onMounted, onUnmounted } from 'vue'
   import AddTorrentModal from '../components/AddTorrentModal.vue';
   import type { TorrentInfo } from '../types/torrent';
+  import { formatSpeed, formatSize, statusClass, statusLabel } from '../utils/torrent';
 
   type Filter = 'all' | 'downloading' | 'seeding' | 'paused' | 'completed'
 
@@ -146,36 +147,6 @@
     } finally {
       transitioning.value = transitioning.value.filter( h => h !== torrent.infoHash)
     }
-  }
-
-  function statusLabel(status: TorrentInfo['status']) {
-    const map = {
-      downloading: 'Baixando',
-      seeding: 'Semeando',
-      paused: 'Pausado',
-      completed: 'Concluído'
-    }
-
-    return map[status]
-  }
-
-  function statusClass(status: TorrentInfo['status']) {
-    const map = { downloading: 'is-info', seeding: 'is-success', paused: 'is-warning', completed:
-'is-success' }
-    return map[status]
-  }
-
-  function formatSpeed(bytes: number) {
-    if (bytes < 1024) return `${bytes} B/s`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB/s`
-    return `${(bytes / 1024 / 1024).toFixed(1)} MB/s`
-  }
-
-  function formatSize(bytes: number) {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-    return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`
   }
 
   onMounted(() => {
