@@ -9,6 +9,7 @@ const router = createRouter({
     { path: '/', redirect: '/torrents' },
     { path: '/torrents', component: { template: '<div/>' } },
     { path: '/settings', component: { template: '<div/>' } },
+    { path: '/movies', component: { template: '<div/>' } },
   ]
 })
 

@@ -8,11 +8,13 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import {
     faDownload, faPlay, faUpload, faPause,
     faCheck, faPlus, faBoxOpen, faUsers,
-    faGear, faFolderOpen, faFolder
+    faGear, faFolderOpen, faFolder,
+    faFilm, faMagnifyingGlass, faStar
   } from '@fortawesome/free-solid-svg-icons'
 library.add(faDownload, faPlay, faUpload, faPause, 
   faCheck, faPlus, faBoxOpen, faUsers,
-  faGear, faFolderOpen, faFolder
+  faGear, faFolderOpen, faFolder,
+  faFilm, faMagnifyingGlass, faStar
 )
 
 const app = createApp(App)
