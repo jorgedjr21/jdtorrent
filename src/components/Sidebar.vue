@@ -18,7 +18,9 @@
           </router-link>
         </li>
         <li>
-          <router-link to="/movies" active-class="is-active">
+          <router-link to="/movies"
+            :class="{ 'is-active': route.path.startsWith('/movies') }"
+          >
             <span class="icon-text">
               <span class="icon"><font-awesome-icon icon="film" /></span>
               <span>Filmes</span>
@@ -40,6 +42,8 @@
 </template>
 
 <script setup lang="ts">
+  import { useRoute } from 'vue-router'
+  const route = useRoute()
 </script>
 
 <style scoped>

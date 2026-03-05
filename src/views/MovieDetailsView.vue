@@ -67,13 +67,24 @@
           <div>
             <p class="is-size-7 has-text-weight-bold mb-2">Torrents</p>
             <div class="is-flex is-flex-wrap-wrap" style="gap: 0.5rem;">
-              <span
+              <button
                 v-for="torrent in movie.torrents"
                 :key="torrent.quality + torrent.type"
-                class="tag is-info"
+                class="tag is-info torrent-btn"
+                :class="{
+                  'is-light': existingHashes.includes(torrent.hash.toLowerCase()),
+                  'torrent-added': existingHashes.includes(torrent.hash.toLowerCase())
+                }"
+                :disabled="loadingTorrent !== '' || existingHashes.includes(torrent.hash.toLowerCase())"
+                :data-tooltip="existingHashes.includes(torrent.hash.toLowerCase()) ? 'Já adicionado para download' :
+              undefined"
+                @click="addTorrent(torrent.hash, torrent.quality, torrent.type)"
               >
+                <span v-if="loadingTorrent === torrent.hash" class="icon is-small mr-1">
+                  <font-awesome-icon icon="spinner" spin />
+                </span>
                 {{ torrent.quality }} {{ torrent.type }} · {{ torrent.size }}
-              </span>
+              </button>
             </div>
           </div>
         </div>
@@ -99,6 +110,13 @@
           </div>
         </div>
       </div>
+
+      <transition name="toast">
+        <div v-if="addedFeedback" class="toast">
+          <span class="icon has-text-success mr-2">✓</span>
+          {{ addedFeedback }}
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -115,16 +133,49 @@
   const loading = ref(false)
   const error = ref('')
   const ytsApiUrl = ref('')
+  const downloadPath = ref('')
+  const addedFeedback = ref('')
+  const loadingTorrent = ref('')
+  const existingHashes = ref<string[]>([])
+  const trackers = [
+    'udp://tracker.opentrackr.org:1337/announce,',
+    'udp://tracker.torrent.eu.org:451/announce',
+    'udp://tracker.dler.org:6969/announce',
+    'udp://open.stealth.si:80/announce',
+    'udp://open.demonii.com:1337/announce',
+    'https://tracker.moeblog.cn:443/announce',
+    'udp://open.dstud.io:6969/announce',
+    'udp://tracker.srv00.com:6969/announce',
+    'https://tracker.zhuqiy.com:443/announce',
+    'https://tracker.pmman.tech:443/announce',
+  ]
 
+  async function addTorrent(hash: string, quality: string, type: string) {
+    loadingTorrent.value = hash
+    try {
+      const dn = encodeURIComponent(movie.value?.title ?? '')
+      const trackerParams = trackers.map(t => `tr=${encodeURIComponent(t)}`).join('&')
+      const magnet = `magnet:?xt=urn:btih:${hash}&dn=${dn}&${trackerParams}`
+      await window.electronAPI.torrent.addMagnet(magnet, downloadPath.value)
+      existingHashes.value.push(hash.toLowerCase())
+      addedFeedback.value = `${quality} ${type} adicionado!`
+      setTimeout(() => { addedFeedback.value = '' }, 3000)
+    } finally {
+      loadingTorrent.value = ''
+    }
+  }
 
   onMounted(async () => {
     loading.value = true
     const s = await window.electronAPI.settings.get()
     ytsApiUrl.value = s.ytsApiUrl
+    downloadPath.value = s.downloadPath
+
+    const torrents = await window.electronAPI.torrent.list()
+    existingHashes.value = torrents.map((t: any) => t.infoHash.toLowerCase())
 
     try {
       const data = await getMovieDetails(Number(route.params.id), ytsApiUrl.value)
-      console.log(data.movie)
       movie.value = data.movie
     } catch (e: any) {
       error.value = 'Erro ao carregar detalhes do filme'
@@ -256,5 +307,69 @@
     font-size: 0.65rem;
     color: #888;
     line-height: 1.2;
+  }
+
+  .torrent-btn {
+    cursor: pointer;
+    border: none;
+    font-size: 0.75rem;
+  }
+
+  .torrent-btn:hover {
+    filter: brightness(1.15);
+  }
+
+  .torrent-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    pointer-events: auto;
+  }
+
+  .torrent-added {
+    background-color: #aaa !important;
+    border-color: #aaa !important;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #1a1a2e;
+    color: #fff;
+    padding: 0.85rem 1.25rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    font-size: 0.9rem;
+    z-index: 100;
+    border-left: 4px solid #48c78e;
+  }
+
+  .toast-enter-active, .toast-leave-active {
+    transition: all 0.3s ease;
+  }
+
+  .toast-enter-from, .toast-leave-to {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  [data-tooltip] {
+    position: relative;
+  }
+
+  [data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a2e;
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
   }
 </style>
