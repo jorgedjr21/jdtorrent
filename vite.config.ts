@@ -4,7 +4,7 @@ import { execSync } from 'child_process'
 
 const commitHash = ( () => {
   try { return execSync('git rev-parse HEAD').toString().trim().slice(0,6)}
-  catch { return '' }
+  catch { return 'dev' }
 } )
 
 // https://vite.dev/config/

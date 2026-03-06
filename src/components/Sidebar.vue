@@ -56,7 +56,6 @@
 
 <script setup lang="ts">
   import { useRoute } from 'vue-router'
-  import { __APP_VERSION__, __COMMIT_HASH__ } from '../types/electron';
   const { electronAPI } = window
   const route = useRoute()
   const app_version = __APP_VERSION__
