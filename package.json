@@ -11,8 +11,8 @@
     "dev": "concurrently \"vite\" \"npm run electron:dev\"",
     "electron:dev": "wait-on http://localhost:5173 && tsc -p electron/tsconfig.json && cross-env NODE_ENV=development electron dist-electron/main.js --no-sandbox",
     "build": "vite build && tsc -p electron/tsconfig.json && electron-builder",
-    "build:win": "vite build && tsc -p electron/tsconfig.json && electron-builder --win",
-    "build:linux": "vite build && tsc -p electron/tsconfig.json && electron-builder --linux",
+    "build:win": "vite build && tsc -p electron/tsconfig.json && electron-builder --win --publish-never",
+    "build:linux": "vite build && tsc -p electron/tsconfig.json && electron-builder --linux --publish-never",
     "preview": "vite preview",
     "test": "vitest"
   },
