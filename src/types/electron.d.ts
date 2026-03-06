@@ -8,7 +8,6 @@ declare global {
         quit: () => Promise<void>
       },
       torrent: {
-        chooseFolder: () => Promise<string | null>
         addFile: (savePath: string) => Promise<TorrentInfo | null>
         addMagnet: (uri: string, savePath: string) => Promise<TorrentInfo>
         list: () => Promise<TorrentInfo[]>

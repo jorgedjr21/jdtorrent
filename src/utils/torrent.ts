@@ -18,7 +18,6 @@ export function statusLabel(status: TorrentInfo['status']): string {
     downloading: 'Baixando',
     seeding: 'Semeando',
     paused: 'Pausado',
-    completed: 'Concluído'
   }
   return map[status]
 }
@@ -28,7 +27,6 @@ export function statusClass(status: TorrentInfo['status']): string {
     downloading: 'is-info',
     seeding: 'is-success',
     paused: 'is-warning',
-    completed: 'is-success'
   }
   return map[status]
 }

@@ -35,7 +35,6 @@ describe('statusLabel', () => {
     expect(statusLabel('downloading')).toBe('Baixando')
     expect(statusLabel('seeding')).toBe('Semeando')
     expect(statusLabel('paused')).toBe('Pausado')
-    expect(statusLabel('completed')).toBe('Concluído')
   })
 })
 
@@ -44,6 +43,5 @@ describe('statusClass', () => {
     expect(statusClass('downloading')).toBe('is-info')
     expect(statusClass('seeding')).toBe('is-success')
     expect(statusClass('paused')).toBe('is-warning')
-    expect(statusClass('completed')).toBe('is-success')
   })
 })

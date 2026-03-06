@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
-      <h1 class="title is-5-mb-0">Torrents</h1>
+      <h1 class="title is-5 mb-0">Torrents</h1>
       <button class="button is-primary is-small" @click="showModal = true">
         <span class="icon"><font-awesome-icon icon="plus"/></span>
         <span>Adicionar torrent</span>
@@ -21,9 +21,6 @@
         </li>
         <li :class="{'is-active': filter === 'paused'}">
           <a @click="filter = 'paused'">Pausado ({{ count('paused') }})</a>
-        </li>
-        <li :class="{'is-active': filter === 'completed'}">
-          <a @click="filter = 'completed'">Completado ({{ count('completed') }})</a>
         </li>
       </ul>
     </div>
@@ -50,7 +47,7 @@
         <span class="progress-label">{{ (torrent.progress * 100).toFixed(2) }}%</span>
       </div>
       
-      <div class="is-flex is-flext-wrap-wrap stats-row">
+      <div class="is-flex is-flex-wrap-wrap stats-row">
         <span class="stat-item">
           <font-awesome-icon icon="download" class="mr-1" />
           {{ formatSpeed(torrent.downloadSpeed) }}
@@ -137,13 +134,14 @@
   import type { TorrentInfo } from '../types/torrent';
   import { formatSpeed, formatSize, statusClass, statusLabel, formatDate } from '../utils/torrent';
 
-  type Filter = 'all' | 'downloading' | 'seeding' | 'paused' | 'completed'
+  type Filter = 'all' | 'downloading' | 'seeding' | 'paused'
 
   const torrents = ref<TorrentInfo[]>([])
   const showModal = ref(false)
   const filter = ref<Filter>('all')
   const transitioning = ref<string[]>([])
   const deleteMenuOpen = ref('')
+  const closeDeleteMenu = () => { deleteMenuOpen.value = '' }
   let interval: ReturnType<typeof setInterval>
 
   const filteredTorrents = computed(() => {
@@ -182,12 +180,12 @@
   onMounted(() => {
     fetchTorrents()
     interval = setInterval(fetchTorrents, 2000)
-    document.addEventListener('click', () => { deleteMenuOpen.value = '' })
+    document.addEventListener('click', closeDeleteMenu)
   })
 
   onUnmounted(() => {
     clearInterval(interval)
-    document.removeEventListener('click', () => { deleteMenuOpen.value = '' })
+    document.removeEventListener('click', closeDeleteMenu)
   })
 </script>
 
