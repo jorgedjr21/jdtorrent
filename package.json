@@ -1,7 +1,7 @@
 {
   "name": "jdtorrent",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "dis-electron/main.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"npm run electron:dev\"",
