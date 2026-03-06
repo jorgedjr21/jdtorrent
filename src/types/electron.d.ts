@@ -4,6 +4,9 @@ declare global {
   interface Window {
     electronAPI: {
       platform: string,
+      app: {
+        quit: () => Promise<void>
+      },
       torrent: {
         chooseFolder: () => Promise<string | null>
         addFile: (savePath: string) => Promise<TorrentInfo | null>
