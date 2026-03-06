@@ -50,7 +50,8 @@
       </div>
 
       <div v-else class="movies-grid">
-        <div v-for="movie in movies" :key="movie.id" class="movie-card">
+        <div v-for="movie in movies" :key="movie.id" class="movie-card"
+          @click="router.push(`/movies/${movie.id}`)">
           <img :src="movie.medium_cover_image" :alt="movie.title" />
           <div class="movie-info">
             <p class="movie-title">{{ movie.title }}</p>
@@ -73,7 +74,7 @@
             </div>
 
             <div class="movie-genres mt-3">
-              <span v-for="genre in movie.genres.slice(0,2)" class="tag is-dark is-small mr-1">
+              <span v-for="genre in movie.genres?.slice(0,2)" class="tag is-dark is-small mr-1">
                 {{ genre }}
               </span>
             </div>
@@ -94,7 +95,9 @@
   import {ref, onMounted } from 'vue'
   import { listMovies } from '../services/yts';
   import type { Movie } from '../types/movie';
+  import { useRouter } from 'vue-router';
 
+  const router = useRouter();
   const movies = ref<Movie[]>([])
   const loading = ref(false)
   const error = ref('')

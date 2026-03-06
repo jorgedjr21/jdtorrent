@@ -32,10 +32,12 @@ describe('loadSettings', () => {
 
 describe('saveSettings', () => {
   it('writes the config to the json file', () => {
-    saveSettings({ downloadPath: '/new/path' })
+    saveSettings({ downloadPath: '/new/path', ytsApiUrl: 'http://fake-api' })
     expect(mockWriteFileSync).toHaveBeenCalledWith(
       expect.stringContaining('settings.json'),
       expect.stringContaining('/new/path')
     )
+    const json = mockWriteFileSync.mock.calls[0][1]
+    expect(json).toContain('http://fake-api')
   })
 })

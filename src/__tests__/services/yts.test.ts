@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { listMovies } from '../../services/yts'
+import { listMovies, getMovieDetails } from '../../services/yts'
 
 const mockResponse = {
   movie_count: 100,
@@ -49,5 +49,31 @@ describe('listMovies', () => {
   it('propagates error when fetch fails', async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
     await expect(listMovies(1, '', 'http://fake-api')).rejects.toThrow('Network error')
+  })
+})
+
+describe('getMovieDetails', () => {
+  it('calls the correct URL with movie_id, with_images and with_cast params', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: () => Promise.resolve({ data: { movie: {} } })
+    } as any)
+    await getMovieDetails(123, 'http://fake-api')
+    expect(fetch).toHaveBeenCalledWith(
+      'http://fake-api/movie_details.json?movie_id=123&with_images=true&with_cast=true'
+    )
+  })
+
+  it('returns the movie data from the response', async () => {
+    const mockData = { movie: { id: 123, title: 'Inception' } }
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: () => Promise.resolve({ data: mockData })
+    } as any)
+    const result = await getMovieDetails(123, 'http://fake-api')
+    expect(result).toEqual(mockData)
+  })
+
+  it('propagates error when fetch fails', async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
+    await expect(getMovieDetails(123, 'http://fake-api')).rejects.toThrow('Network error')
   })
 })

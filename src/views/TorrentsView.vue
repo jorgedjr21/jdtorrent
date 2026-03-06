@@ -64,6 +64,10 @@
           {{ torrent.numPeers }} peers
         </span>
         <span class="stat-item">{{ formatSize(torrent.totalSize) }}</span>
+        <span class="stat-item">
+          <font-awesome-icon icon="clock" class="mr-1" />
+          {{  formatDate(torrent.addedAt) }}
+        </span>
       </div>
 
       <div class="is-flex mt-3" style="gap: 0.5rem;">
@@ -112,7 +116,7 @@
   import {ref, computed, onMounted, onUnmounted } from 'vue'
   import AddTorrentModal from '../components/AddTorrentModal.vue';
   import type { TorrentInfo } from '../types/torrent';
-  import { formatSpeed, formatSize, statusClass, statusLabel } from '../utils/torrent';
+  import { formatSpeed, formatSize, statusClass, statusLabel, formatDate } from '../utils/torrent';
 
   type Filter = 'all' | 'downloading' | 'seeding' | 'paused' | 'completed'
 

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import { registerSettingsHandlers } from './settings'
 import { registerTorrentHandlers, initTorrentClient } from './torrent'
@@ -30,6 +30,8 @@ app.whenReady().then(async () => {
   await initTorrentClient()
   createWindow()
 })
+
+ipcMain.handle('app:quit', () => app.quit())
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()

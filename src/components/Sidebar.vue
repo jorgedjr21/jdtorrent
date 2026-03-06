@@ -18,7 +18,9 @@
           </router-link>
         </li>
         <li>
-          <router-link to="/movies" active-class="is-active">
+          <router-link to="/movies"
+            :class="{ 'is-active': route.path.startsWith('/movies') }"
+          >
             <span class="icon-text">
               <span class="icon"><font-awesome-icon icon="film" /></span>
               <span>Filmes</span>
@@ -36,10 +38,28 @@
         </span>
       </router-link>
     </div>
+
+    <div class="quit-item mt-2">
+      <button class="quit-btn" @click="electronAPI.app.quit()">
+        <span class="icon-text">
+          <span class="icon"><font-awesome-icon icon="power-off" /></span>
+          <span>Sair</span>
+        </span>
+      </button>
+    </div>
+
+    <div class="version-info">
+      v{{ app_version }} . {{  commitHash }}
+    </div>
   </aside>
 </template>
 
 <script setup lang="ts">
+  import { useRoute } from 'vue-router'
+  const { electronAPI } = window
+  const route = useRoute()
+  const app_version = __APP_VERSION__
+  const commitHash = __COMMIT_HASH__
 </script>
 
 <style scoped>
@@ -84,5 +104,33 @@
   .settings-item {  
     border-top: 1px solid #2e2e4e;
     padding-top: 0.75rem;
+  }
+
+  .quit-item {
+    padding-top: 0.5rem;
+  }
+
+  .quit-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0.5em 0.75em;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  .quit-btn:hover {
+    background-color: rgba(255, 107, 107, 0.15);
+  }
+
+  .version-info {
+    font-size: 0.65rem;
+    color: #555;
+    text-align: center;
+    padding-top: 0.5rem;
   }
 </style>

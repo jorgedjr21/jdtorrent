@@ -175,7 +175,18 @@ export function registerTorrentHandlers() {
       pausedTorrentsInfo.delete(infoHash)
       const alreadyActive = client.torrents.find((t: any) => t.infoHash === infoHash)
       if (!alreadyActive) {
-        client.add(meta.magnetURI, { path: meta.savePath })
+        client.add(meta.magnetURI, { path: meta.savePath }, (torrent: any) => {
+          torrent.on('done', () => {
+            const existingMeta = torrentMeta.get(infoHash)
+            if (existingMeta) torrentMeta.set(infoHash, { ...existingMeta, progress: 1 })
+            const stored = loadStoredTorrents()
+            const idx = stored.findIndex(s => s.infoHash === infoHash)
+            if (idx >= 0) {
+              stored[idx].progress = 1
+              saveStoredTorrents(stored)
+            }
+          })
+        })
       }
     }
   })
@@ -187,8 +198,11 @@ const dynamicImport = new Function('specifier', 'return import(specifier)') as (
 export async function initTorrentClient() {
   const { default: WebTorrent } = await dynamicImport('webtorrent')
   client = new WebTorrent()
+  populateFromStoredTorrents(loadStoredTorrents())
+}
 
-  for(const entry of loadStoredTorrents()) {
+export function populateFromStoredTorrents(entries: StoredTorrent[]) {
+  for (const entry of entries) {
     pausedSet.add(entry.infoHash)
     torrentMeta.set(entry.infoHash, {
       magnetURI: entry.magnetURI,
@@ -207,7 +221,7 @@ export async function initTorrentClient() {
       downloadSpeed: 0,
       uploadSpeed: 0,
       numPeers: 0,
-      status: 'paused',
+      status: entry.progress === 1 ? 'seeding' : 'paused',
       files: entry.files,
       addedAt: entry.addedAt,
       timeRemaining: 0
