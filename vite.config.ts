@@ -3,9 +3,9 @@ import vue from '@vitejs/plugin-vue'
 import { execSync } from 'child_process'
 
 const commitHash = ( () => {
-  try { return execSync('git rev-parse HEAD').toString().trim().slice(0,6)}
+  try { return execSync('git rev-parse HEAD').toString().trim().slice(0,6) }
   catch { return 'dev' }
-} )
+} )()
 
 // https://vite.dev/config/
 export default defineConfig({
