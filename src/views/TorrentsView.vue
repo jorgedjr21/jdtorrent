@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
-      <h1 class="title is-5-mb-0">Torrents</h1>
+      <h1 class="title is-5 mb-0">Torrents</h1>
       <button class="button is-primary is-small" @click="showModal = true">
         <span class="icon"><font-awesome-icon icon="plus"/></span>
         <span>Adicionar torrent</span>
@@ -21,9 +21,6 @@
         </li>
         <li :class="{'is-active': filter === 'paused'}">
           <a @click="filter = 'paused'">Pausado ({{ count('paused') }})</a>
-        </li>
-        <li :class="{'is-active': filter === 'completed'}">
-          <a @click="filter = 'completed'">Completado ({{ count('completed') }})</a>
         </li>
       </ul>
     </div>
@@ -50,7 +47,7 @@
         <span class="progress-label">{{ (torrent.progress * 100).toFixed(2) }}%</span>
       </div>
       
-      <div class="is-flex is-flext-wrap-wrap stats-row">
+      <div class="is-flex is-flex-wrap-wrap stats-row">
         <span class="stat-item">
           <font-awesome-icon icon="download" class="mr-1" />
           {{ formatSpeed(torrent.downloadSpeed) }}
@@ -86,6 +83,25 @@
           </span>
           <span>{{ torrent.status === 'paused' ? 'Iniciar' : 'Pausar' }}</span>
         </button>
+
+        <div class="dropdown" :class="{ 'is-active': deleteMenuOpen === torrent.infoHash }">
+          <div class="dropdown-trigger">
+            <button class="button is-small is-danger is-light" @click.stop="deleteMenuOpen = deleteMenuOpen
+        === torrent.infoHash ? '' : torrent.infoHash">
+              <span class="icon"><font-awesome-icon icon="trash" /></span>
+            </button>
+          </div>
+          <div class="dropdown-menu">
+            <div class="dropdown-content">
+              <a class="dropdown-item" @click="deleteTorrent(torrent.infoHash, false)">
+                Deletar torrent
+              </a>
+              <a class="dropdown-item has-text-danger" @click="deleteTorrent(torrent.infoHash, true)">
+                Deletar torrent e arquivos
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       <details class="mt-3">
@@ -118,12 +134,14 @@
   import type { TorrentInfo } from '../types/torrent';
   import { formatSpeed, formatSize, statusClass, statusLabel, formatDate } from '../utils/torrent';
 
-  type Filter = 'all' | 'downloading' | 'seeding' | 'paused' | 'completed'
+  type Filter = 'all' | 'downloading' | 'seeding' | 'paused'
 
   const torrents = ref<TorrentInfo[]>([])
   const showModal = ref(false)
   const filter = ref<Filter>('all')
   const transitioning = ref<string[]>([])
+  const deleteMenuOpen = ref('')
+  const closeDeleteMenu = () => { deleteMenuOpen.value = '' }
   let interval: ReturnType<typeof setInterval>
 
   const filteredTorrents = computed(() => {
@@ -153,13 +171,21 @@
     }
   }
 
+  async function deleteTorrent(infoHash: string, deleteFiles: boolean) {
+    deleteMenuOpen.value = ''
+    await window.electronAPI.torrent.remove(infoHash, deleteFiles)
+    await fetchTorrents()
+  }
+
   onMounted(() => {
     fetchTorrents()
     interval = setInterval(fetchTorrents, 2000)
+    document.addEventListener('click', closeDeleteMenu)
   })
 
   onUnmounted(() => {
     clearInterval(interval)
+    document.removeEventListener('click', closeDeleteMenu)
   })
 </script>
 

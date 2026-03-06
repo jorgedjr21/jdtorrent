@@ -8,12 +8,12 @@ declare global {
         quit: () => Promise<void>
       },
       torrent: {
-        chooseFolder: () => Promise<string | null>
         addFile: (savePath: string) => Promise<TorrentInfo | null>
         addMagnet: (uri: string, savePath: string) => Promise<TorrentInfo>
         list: () => Promise<TorrentInfo[]>
         pause: (infoHash: string) => Promise<void>
         resume: (infoHash: string) => Promise<void>
+        remove: (infoHash: string, deleteFiles: boolean) => Promise<void>
       },
       settings: {
         get: () => Promise<{downloadPath: string, ytsApiUrl: string}>,

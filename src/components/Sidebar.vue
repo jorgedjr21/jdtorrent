@@ -49,7 +49,7 @@
     </div>
 
     <div class="version-info">
-      v{{ app_version }} . {{  commitHash }}
+      v{{ app_version }} · {{  commitHash }}
     </div>
   </aside>
 </template>

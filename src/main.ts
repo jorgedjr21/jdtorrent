@@ -11,13 +11,15 @@ import {
     faGear, faFolderOpen, faFolder,
     faFilm, faMagnifyingGlass, faStar,
     faUser, faSpinner, faClock,
-    faPowerOff
+    faPowerOff, faTrash
+    
   } from '@fortawesome/free-solid-svg-icons'
 library.add(faDownload, faPlay, faUpload, faPause, 
   faCheck, faPlus, faBoxOpen, faUsers,
   faGear, faFolderOpen, faFolder,
   faFilm, faMagnifyingGlass, faStar,
-  faUser, faSpinner, faClock, faPowerOff
+  faUser, faSpinner, faClock, faPowerOff,
+  faTrash
 )
 
 const app = createApp(App)

@@ -12,7 +12,7 @@ export interface TorrentInfo {
   downloadSpeed: number
   uploadSpeed: number
   numPeers: number
-  status: 'downloading' | 'seeding' | 'paused' | 'completed'
+  status: 'downloading' | 'seeding' | 'paused'
   files: TorrentFile[]
   addedAt: number
   timeRemaining: number
