@@ -40,20 +40,27 @@
     </div>
 
     <div class="quit-item mt-2">
-    <button class="quit-btn" @click="electronAPI.app.quit()">
-      <span class="icon-text">
-        <span class="icon"><font-awesome-icon icon="power-off" /></span>
-        <span>Sair</span>
-      </span>
-    </button>
-  </div>
+      <button class="quit-btn" @click="electronAPI.app.quit()">
+        <span class="icon-text">
+          <span class="icon"><font-awesome-icon icon="power-off" /></span>
+          <span>Sair</span>
+        </span>
+      </button>
+    </div>
+
+    <div class="version-info">
+      v{{ app_version }} . {{  commitHash }}
+    </div>
   </aside>
 </template>
 
 <script setup lang="ts">
   import { useRoute } from 'vue-router'
+  import { __APP_VERSION__, __COMMIT_HASH__ } from '../types/electron';
   const { electronAPI } = window
   const route = useRoute()
+  const app_version = __APP_VERSION__
+  const commitHash = __COMMIT_HASH__
 </script>
 
 <style scoped>
@@ -119,5 +126,12 @@
 
   .quit-btn:hover {
     background-color: rgba(255, 107, 107, 0.15);
+  }
+
+  .version-info {
+    font-size: 0.65rem;
+    color: #555;
+    text-align: center;
+    padding-top: 0.5rem;
   }
 </style>
