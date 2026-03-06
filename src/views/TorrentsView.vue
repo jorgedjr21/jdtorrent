@@ -86,6 +86,25 @@
           </span>
           <span>{{ torrent.status === 'paused' ? 'Iniciar' : 'Pausar' }}</span>
         </button>
+
+        <div class="dropdown" :class="{ 'is-active': deleteMenuOpen === torrent.infoHash }">
+          <div class="dropdown-trigger">
+            <button class="button is-small is-danger is-light" @click.stop="deleteMenuOpen = deleteMenuOpen
+        === torrent.infoHash ? '' : torrent.infoHash">
+              <span class="icon"><font-awesome-icon icon="trash" /></span>
+            </button>
+          </div>
+          <div class="dropdown-menu">
+            <div class="dropdown-content">
+              <a class="dropdown-item" @click="deleteTorrent(torrent.infoHash, false)">
+                Deletar torrent
+              </a>
+              <a class="dropdown-item has-text-danger" @click="deleteTorrent(torrent.infoHash, true)">
+                Deletar torrent e arquivos
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       <details class="mt-3">
@@ -124,6 +143,7 @@
   const showModal = ref(false)
   const filter = ref<Filter>('all')
   const transitioning = ref<string[]>([])
+  const deleteMenuOpen = ref('')
   let interval: ReturnType<typeof setInterval>
 
   const filteredTorrents = computed(() => {
@@ -153,13 +173,21 @@
     }
   }
 
+  async function deleteTorrent(infoHash: string, deleteFiles: boolean) {
+    deleteMenuOpen.value = ''
+    await window.electronAPI.torrent.remove(infoHash, deleteFiles)
+    await fetchTorrents()
+  }
+
   onMounted(() => {
     fetchTorrents()
     interval = setInterval(fetchTorrents, 2000)
+    document.addEventListener('click', () => { deleteMenuOpen.value = '' })
   })
 
   onUnmounted(() => {
     clearInterval(interval)
+    document.removeEventListener('click', () => { deleteMenuOpen.value = '' })
   })
 </script>
 

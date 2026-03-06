@@ -11,7 +11,8 @@ import { contextBridge, ipcRenderer } from 'electron';
         addMagnet: (uri: string, savePath: string) => ipcRenderer.invoke('torrent:add-magnet', uri,savePath),
         list: () => ipcRenderer.invoke('torrent:list'),
         pause: (infoHash: string) => ipcRenderer.invoke('torrent:pause', infoHash),
-        resume: (infoHash: string) => ipcRenderer.invoke('torrent:resume', infoHash)
+        resume: (infoHash: string) => ipcRenderer.invoke('torrent:resume', infoHash),
+        remove: (infoHash: string, deleteFiles: boolean) => ipcRenderer.invoke('torrent:remove', infoHash, deleteFiles)
       },
       settings: {
         get: () => ipcRenderer.invoke('settings:get'),

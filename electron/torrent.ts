@@ -190,6 +190,38 @@ export function registerTorrentHandlers() {
       }
     }
   })
+
+  ipcMain.handle('torrent:remove', async (_event, infoHash: string, deleteFiles: boolean) => {
+    const meta = torrentMeta.get(infoHash)
+    const activeTorrent = client.torrents.find((t: any) => t.infoHash === infoHash)
+
+    if(activeTorrent) {
+      await new Promise<void> (resolve => activeTorrent.destroy({destroyStore: deleteFiles}, resolve))
+    }  else if (deleteFiles && meta?.files && meta.files.length > 0) {
+        const firstFile = meta.files[0].path
+        const resolvedFirst = path.isAbsolute(firstFile)
+          ? firstFile
+          : path.join(meta.savePath, firstFile)
+        const torrentFolder = path.dirname(resolvedFirst)
+
+        if (torrentFolder !== meta.savePath) {
+          // multi-file torrent: deletes the entire torrent folder (including subfolders)
+          fs.rmSync(torrentFolder, { recursive: true, force: true })
+        } else {
+          // single-file torrent: delete each file individually
+          for (const file of meta.files) {
+            const filePath = path.isAbsolute(file.path) ? file.path : path.join(meta.savePath, file.path)
+            try { fs.rmSync(filePath, { force: true }) } catch {}
+          }
+        }
+      }
+
+    pausedSet.delete(infoHash)
+    pausedTorrentsInfo.delete(infoHash)
+    torrentMeta.delete(infoHash)
+
+    saveStoredTorrents(loadStoredTorrents().filter( s => s.infoHash !== infoHash))
+  })
 }
 
 const dynamicImport = new Function('specifier', 'return import(specifier)') as (s: string) =>

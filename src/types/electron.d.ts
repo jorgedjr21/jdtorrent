@@ -14,6 +14,7 @@ declare global {
         list: () => Promise<TorrentInfo[]>
         pause: (infoHash: string) => Promise<void>
         resume: (infoHash: string) => Promise<void>
+        remove: (infoHash: string, deleteFiles: boolean) => Promise<void>
       },
       settings: {
         get: () => Promise<{downloadPath: string, ytsApiUrl: string}>,
