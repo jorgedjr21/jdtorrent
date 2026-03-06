@@ -1,55 +1,40 @@
 <template>
-  <aside class="sidebar p-4">
-    <div class="brand mb-5">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
       <span class="icon has-text-primary mr-2">
         <font-awesome-icon icon="download" size="lg" />
       </span>
-      <span class="has-text-white has-text-weight-bold is-size-5">JDTorrent</span>
+      <span class="sidebar-brand-name">JDTorrent</span>
     </div>
 
-    <nav class="menu">
-      <ul class="menu-list">
-        <li>
-          <router-link to="/torrents" active-class="is-active">
-            <span class="icon-text">
-              <span class="icon"><font-awesome-icon icon="download" /></span>
-              <span>Torrents</span>
-            </span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/movies"
-            :class="{ 'is-active': route.path.startsWith('/movies') }"
-          >
-            <span class="icon-text">
-              <span class="icon"><font-awesome-icon icon="film" /></span>
-              <span>Filmes</span>
-            </span>
-          </router-link>
-        </li>
-      </ul>
+    <nav class="sidebar-nav">
+      <router-link to="/torrents" class="sidebar-item" active-class="is-active">
+        <span class="icon"><font-awesome-icon icon="download" /></span>
+        <span>Torrents</span>
+      </router-link>
+
+      <router-link
+        to="/movies"
+        class="sidebar-item"
+        :class="{ 'is-active': route.path.startsWith('/movies') }"
+      >
+        <span class="icon"><font-awesome-icon icon="film" /></span>
+        <span>Filmes</span>
+      </router-link>
     </nav>
 
-    <div class="settings-item mt-auto">
-      <router-link to="/settings" active-class="is-active">
-        <span class="icon-text">
-          <span class="icon"><font-awesome-icon icon="gear" /></span>
-          <span>Configurações</span>
-        </span>
+    <div class="sidebar-bottom">
+      <router-link to="/settings" class="sidebar-item" active-class="is-active">
+        <span class="icon"><font-awesome-icon icon="gear" /></span>
+        <span>Configurações</span>
       </router-link>
-    </div>
 
-    <div class="quit-item mt-2">
-      <button class="quit-btn" @click="electronAPI.app.quit()">
-        <span class="icon-text">
-          <span class="icon"><font-awesome-icon icon="power-off" /></span>
-          <span>Sair</span>
-        </span>
+      <button class="sidebar-item sidebar-logout" @click="electronAPI.app.quit()">
+        <span class="icon"><font-awesome-icon icon="power-off" /></span>
+        <span>Sair</span>
       </button>
-    </div>
 
-    <div class="version-info">
-      v{{ app_version }} · {{  commitHash }}
+      <div class="sidebar-version">v{{ appVersion }} · {{ commitHash }}</div>
     </div>
   </aside>
 </template>
@@ -58,79 +43,98 @@
   import { useRoute } from 'vue-router'
   const { electronAPI } = window
   const route = useRoute()
-  const app_version = __APP_VERSION__
+  const appVersion = __APP_VERSION__
   const commitHash = __COMMIT_HASH__
 </script>
 
 <style scoped>
   .sidebar {
-    width: 220px;
-    background-color: #1a1a2e;
-    flex-shrink: 0;
+    width: 230px;
+    min-width: 230px;
+    background-color: var(--sidebar-bg);
     display: flex;
     flex-direction: column;
+    padding: 1.5rem 0.75rem;
+    gap: 0.25rem;
   }
 
-  .brand {
+  .sidebar-brand {
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #2e2e4e;
-    padding-bottom: 1rem;
+    padding: 0.5rem 0.75rem 1.5rem;
+    color: var(--sidebar-text);
   }
 
-  /* sobrescreve o tema claro do Bulma menu para o fundo escuro */
-  .menu .menu-list a, .settings-item a {
-    color: #fff;
-    border-radius: 6px;
+  .sidebar-brand-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--sidebar-text);
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+  }
+
+  .sidebar-item {
     display: flex;
     align-items: center;
-    padding: 0.5em 0.75em;
+    gap: 0.75rem;
+    padding: 0.7rem 0.75rem;
+    border-radius: 8px;
+    color: var(--sidebar-text);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
     cursor: pointer;
-    background-color: #2e2e4e;
-  }
-
-  .menu .menu-list a:hover, .settings-item a:hover {
-    background-color: #2e2e4e;
-    color: #fff;
-  }
-
-  .menu .menu-list a.is-active, .settings-item a.is-active {
-    background-color: #2e2e4e;
-    color: #fff;
-    border-left: 3px solid #3498db;
-    border-bottom: 3px solid #3498db;
-  }
-
-  .settings-item {  
-    border-top: 1px solid #2e2e4e;
-    padding-top: 0.75rem;
-  }
-
-  .quit-item {
-    padding-top: 0.5rem;
-  }
-
-  .quit-btn {
-    width: 100%;
+    transition: background-color 0.15s ease;
     background: none;
     border: none;
-    color: #ff6b6b;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    padding: 0.5em 0.75em;
-    cursor: pointer;
-    font-size: 1rem;
+    width: 100%;
+    text-align: left;
   }
 
-  .quit-btn:hover {
-    background-color: rgba(255, 107, 107, 0.15);
+  .sidebar-item:hover {
+    background-color: var(--sidebar-item-hover);
+    color: var(--sidebar-text);
   }
 
-  .version-info {
-    font-size: 0.65rem;
-    color: #555;
+  .sidebar-item.is-active {
+    background-color: var(--sidebar-item-active);
+    color: var(--sidebar-text);
+    font-weight: 600;
+  }
+
+  .sidebar-item .icon {
+    width: 20px;
     text-align: center;
-    padding-top: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    border-top: 1px solid #1a2e45;
+    padding-top: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .sidebar-logout {
+    color: #f87171;
+  }
+
+  .sidebar-logout:hover {
+    background-color: rgba(248, 113, 113, 0.1);
+    color: #f87171;
+  }
+
+  .sidebar-version {
+    font-size: 0.65rem;
+    color: #64748b;
+    text-align: center;
+    padding-top: 0.75rem;
   }
 </style>
