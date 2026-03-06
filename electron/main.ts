@@ -1,9 +1,9 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu } from 'electron'
 import path from 'path'
 import { registerSettingsHandlers } from './settings'
 import { registerTorrentHandlers, initTorrentClient } from './torrent'
 
-const isDev = process.env.NODE_ENV === 'development'
+const isDev = !app.isPackaged
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -20,6 +20,7 @@ function createWindow() {
     win.loadURL('http://localhost:5173')
     win.webContents.on('did-finish-load', () => win.webContents.openDevTools())
   } else {
+    Menu.setApplicationMenu(null)
     win.loadFile(path.join(__dirname, '../dist/index.html'))
   }
 }

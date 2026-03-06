@@ -2,13 +2,49 @@
   "name": "jdtorrent",
   "private": true,
   "version": "0.3.1",
-  "main": "dis-electron/main.js",
+  "main": "dist-electron/main.js",
+  "author": {
+    "name": "=JD=",
+    "email": "jd@jdtorrent.app"
+  },
   "scripts": {
     "dev": "concurrently \"vite\" \"npm run electron:dev\"",
     "electron:dev": "wait-on http://localhost:5173 && tsc -p electron/tsconfig.json && cross-env NODE_ENV=development electron dist-electron/main.js --no-sandbox",
     "build": "vite build && tsc -p electron/tsconfig.json && electron-builder",
+    "build:win": "vite build && tsc -p electron/tsconfig.json && electron-builder --win",
+    "build:linux": "vite build && tsc -p electron/tsconfig.json && electron-builder --linux",
     "preview": "vite preview",
     "test": "vitest"
+  },
+  "build": {
+    "appId": "com.jdtorrent.app",
+    "productName": "JDTorrent",
+    "asar": true,
+    "asarUnpack": ["**/*.node"],
+    "directories": {
+      "output": "release/${version}"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "public/icon.ico"
+    },
+    "linux": {
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
+      ],
+      "icon": "public/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
