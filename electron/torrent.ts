@@ -198,8 +198,11 @@ const dynamicImport = new Function('specifier', 'return import(specifier)') as (
 export async function initTorrentClient() {
   const { default: WebTorrent } = await dynamicImport('webtorrent')
   client = new WebTorrent()
+  populateFromStoredTorrents(loadStoredTorrents())
+}
 
-  for(const entry of loadStoredTorrents()) {
+export function populateFromStoredTorrents(entries: StoredTorrent[]) {
+  for (const entry of entries) {
     pausedSet.add(entry.infoHash)
     torrentMeta.set(entry.infoHash, {
       magnetURI: entry.magnetURI,

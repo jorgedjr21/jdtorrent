@@ -35,8 +35,9 @@ describe('saveSettings', () => {
     saveSettings({ downloadPath: '/new/path', ytsApiUrl: 'http://fake-api' })
     expect(mockWriteFileSync).toHaveBeenCalledWith(
       expect.stringContaining('settings.json'),
-      expect.stringContaining('/new/path'),
-      expect.stringContaining('http://fake-api')
+      expect.stringContaining('/new/path')
     )
+    const json = mockWriteFileSync.mock.calls[0][1]
+    expect(json).toContain('http://fake-api')
   })
 })
