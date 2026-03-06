@@ -88,6 +88,22 @@ function addTorrentPaused(source: string, savePath: string, addedAt: number): Pr
   })
 }
 
+export function deleteTorrentFiles(meta: { savePath: string, files?: { path: string }[] }) {
+  if (!meta.files || meta.files.length === 0) return
+  const firstFile = meta.files[0].path
+  const resolvedFirst = path.isAbsolute(firstFile) ? firstFile : path.join(meta.savePath, firstFile)
+  const torrentFolder = path.dirname(resolvedFirst)
+
+  if (torrentFolder !== meta.savePath) {
+    fs.rmSync(torrentFolder, { recursive: true, force: true })
+  } else {
+    for (const file of meta.files) {
+      const filePath = path.isAbsolute(file.path) ? file.path : path.join(meta.savePath, file.path)
+      try { fs.rmSync(filePath, { force: true }) } catch {}
+    }
+  }
+}
+
 export function registerTorrentHandlers() {
   ipcMain.handle('torrent:add-file', async (_event, savePath: string) => {
     const result = await dialog.showOpenDialog({
@@ -198,22 +214,7 @@ export function registerTorrentHandlers() {
     if(activeTorrent) {
       await new Promise<void> (resolve => activeTorrent.destroy({destroyStore: deleteFiles}, resolve))
     }  else if (deleteFiles && meta?.files && meta.files.length > 0) {
-        const firstFile = meta.files[0].path
-        const resolvedFirst = path.isAbsolute(firstFile)
-          ? firstFile
-          : path.join(meta.savePath, firstFile)
-        const torrentFolder = path.dirname(resolvedFirst)
-
-        if (torrentFolder !== meta.savePath) {
-          // multi-file torrent: deletes the entire torrent folder (including subfolders)
-          fs.rmSync(torrentFolder, { recursive: true, force: true })
-        } else {
-          // single-file torrent: delete each file individually
-          for (const file of meta.files) {
-            const filePath = path.isAbsolute(file.path) ? file.path : path.join(meta.savePath, file.path)
-            try { fs.rmSync(filePath, { force: true }) } catch {}
-          }
-        }
+        deleteTorrentFiles(meta)
       }
 
     pausedSet.delete(infoHash)

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import TorrentsView from '../../views/TorrentsView.vue'
 import type { TorrentInfo } from '../../types/torrent'
 
@@ -14,7 +14,7 @@ const makeTorrent = (overrides: Partial<TorrentInfo>): TorrentInfo => ({
   uploadSpeed: 0,
   numPeers: 0,
   status: 'downloading',
-  files: [],
+  files: [{ name: 'movie.mkv', path: '/downloads/Test Movie/movie.mkv', length: 1_000_000_000 }],
   addedAt: Date.now(),
   timeRemaining: 0,
   ...overrides
@@ -22,6 +22,7 @@ const makeTorrent = (overrides: Partial<TorrentInfo>): TorrentInfo => ({
 
 beforeEach(() => {
   vi.mocked(window.electronAPI.torrent.list).mockResolvedValue([])
+  vi.mocked(window.electronAPI.torrent.remove).mockResolvedValue(undefined)
 })
 
 describe('TorrentsView', () => {
@@ -93,5 +94,57 @@ describe('TorrentsView', () => {
     wrapper.find('.box button').trigger('click')
     await wrapper.vm.$nextTick()
     expect(wrapper.find('.box button').classes()).toContain('is-loading')
+  })
+})
+
+describe('TorrentsView - delete', () => {
+  it('shows delete button for each torrent', async () => {
+    vi.mocked(window.electronAPI.torrent.list).mockResolvedValue([makeTorrent({})])
+    const wrapper = mount(TorrentsView, { global: { stubs } })
+    await flushPromises()
+    expect(wrapper.find('button.is-danger').exists()).toBe(true)
+  })
+
+  it('opens dropdown when delete button is clicked', async () => {
+    vi.mocked(window.electronAPI.torrent.list).mockResolvedValue([makeTorrent({})])
+    const wrapper = mount(TorrentsView, { global: { stubs } })
+    await flushPromises()
+    await wrapper.find('button.is-danger').trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.dropdown.is-active').exists()).toBe(true)
+  })
+
+  it('calls remove(infoHash, false) when "Deletar torrent" is clicked', async () => {
+    vi.mocked(window.electronAPI.torrent.list).mockResolvedValue([makeTorrent({})])
+    const wrapper = mount(TorrentsView, { global: { stubs } })
+    await flushPromises()
+    await wrapper.find('button.is-danger').trigger('click')
+    await wrapper.vm.$nextTick()
+    await wrapper.findAll('.dropdown-item')[0].trigger('click')
+    await flushPromises()
+    expect(window.electronAPI.torrent.remove).toHaveBeenCalledWith('abc', false)
+  })
+
+  it('calls remove(infoHash, true) when "Deletar torrent e arquivos" is clicked', async () => {
+    vi.mocked(window.electronAPI.torrent.list).mockResolvedValue([makeTorrent({})])
+    const wrapper = mount(TorrentsView, { global: { stubs } })
+    await flushPromises()
+    await wrapper.find('button.is-danger').trigger('click')
+    await wrapper.vm.$nextTick()
+    await wrapper.findAll('.dropdown-item')[1].trigger('click')
+    await flushPromises()
+    expect(window.electronAPI.torrent.remove).toHaveBeenCalledWith('abc', true)
+  })
+
+  it('refreshes torrent list after deletion', async () => {
+    vi.mocked(window.electronAPI.torrent.list).mockResolvedValue([makeTorrent({})])
+    const wrapper = mount(TorrentsView, { global: { stubs } })
+    await flushPromises()
+    const callsBefore = vi.mocked(window.electronAPI.torrent.list).mock.calls.length
+    await wrapper.find('button.is-danger').trigger('click')
+    await wrapper.vm.$nextTick()
+    await wrapper.findAll('.dropdown-item')[0].trigger('click')
+    await flushPromises()
+    expect(vi.mocked(window.electronAPI.torrent.list).mock.calls.length).toBeGreaterThan(callsBefore)
   })
 })

@@ -8,6 +8,7 @@ window.electronAPI = {
     list: vi.fn().mockResolvedValue([]),
     pause: vi.fn().mockResolvedValue(undefined),
     resume: vi.fn().mockResolvedValue(undefined),
+    remove: vi.fn().mockResolvedValue(undefined),
   },
   settings: {
     get: vi.fn().mockResolvedValue({ downloadPath: '/downloads' , ytsApiUrl: 'http://fake-api'}),
