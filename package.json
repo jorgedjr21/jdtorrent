@@ -1,7 +1,7 @@
 {
   "name": "jdtorrent",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.4.0",
   "main": "dist-electron/main.js",
   "author": {
     "name": "=JD=",
@@ -20,7 +20,9 @@
     "appId": "com.jdtorrent.app",
     "productName": "JDTorrent",
     "asar": true,
-    "asarUnpack": ["**/*.node"],
+    "asarUnpack": [
+      "**/*.node"
+    ],
     "directories": {
       "output": "release/${version}"
     },
@@ -29,13 +31,30 @@
       "dist-electron/**/*"
     ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "public/icon.ico"
     },
     "linux": {
       "target": [
-        { "target": "AppImage", "arch": ["x64"] },
-        { "target": "deb", "arch": ["x64"] }
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "public/icon.png"
     },
