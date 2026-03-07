@@ -23,13 +23,37 @@
 
       <div class="field mt-4">
         <label class="label">{{ $t('settings.language') }}</label>
-        <div class="control">
-          <div class="select">
-            <select v-model="locale">
-              <option value="pt-BR">Português (BR)</option>
-              <option value="en">English</option>
-            </select>
-          </div>
+        <div class="lang-picker">
+          <button
+            class="lang-btn"
+            :class="{ 'is-selected': locale === 'pt-BR' }"
+            @click="locale = 'pt-BR'"
+          >
+            <svg class="flag" viewBox="0 0 60 42" xmlns="http://www.w3.org/2000/svg">
+              <rect width="60" height="42" fill="#009c3b"/>
+              <polygon points="30,4 56,21 30,38 4,21" fill="#ffdf00"/>
+              <circle cx="30" cy="21" r="10" fill="#002776"/>
+              <path d="M21,18.5 Q30,14 39,18.5" stroke="white" stroke-width="1.5" fill="none"/>
+            </svg>
+            <span class="lang-name">Português</span>
+          </button>
+          <button
+            class="lang-btn"
+            :class="{ 'is-selected': locale === 'en' }"
+            @click="locale = 'en'"
+          >
+            <svg class="flag" viewBox="0 0 60 42" xmlns="http://www.w3.org/2000/svg">
+              <rect width="60" height="42" fill="#B22234"/>
+              <rect y="3.23" width="60" height="3.23" fill="white"/>
+              <rect y="9.69" width="60" height="3.23" fill="white"/>
+              <rect y="16.15" width="60" height="3.23" fill="white"/>
+              <rect y="22.61" width="60" height="3.23" fill="white"/>
+              <rect y="29.07" width="60" height="3.23" fill="white"/>
+              <rect y="35.53" width="60" height="3.23" fill="white"/>
+              <rect width="24" height="22.61" fill="#3C3B6E"/>
+            </svg>
+            <span class="lang-name">English</span>
+          </button>
         </div>
       </div>
 
@@ -95,3 +119,46 @@
     setTimeout(() => { saved.value = false }, 3000)
   }
 </script>
+
+<style scoped>
+.lang-picker {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.lang-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.6rem 1.1rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+  opacity: 0.5;
+}
+
+.lang-btn:hover {
+  opacity: 0.8;
+  border-color: var(--accent);
+}
+
+.lang-btn.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  opacity: 1;
+}
+
+.flag {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.lang-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+</style>
