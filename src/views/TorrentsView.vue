@@ -107,13 +107,23 @@
       <details class="mt-3">
         <summary class="has-text-grey is-size-7 is-clickable">
           {{ torrent.files.length }} arquivo(s)
+          <span v-if="torrent.selectedFiles && torrent.selectedFiles.length < torrent.files.length"
+            class="tag is-warning is-light is-small ml-2">
+            {{ torrent.selectedFiles.length }} selecionado(s)
+          </span>
         </summary>
         <ul class="mt-2">
           <li
             v-for="file in torrent.files"
             :key="file.path"
-            class="is-size-7 has-text-grey-dark"
+            class="is-size-7 mt-1"
+            :class="torrent.selectedFiles && !torrent.selectedFiles.includes(file.name)
+              ? 'has-text-grey-light'
+              : 'has-text-grey-dark'"
           >
+            <span v-if="torrent.selectedFiles">
+              {{ torrent.selectedFiles.includes(file.name) ? '✓' : '✗' }}
+            </span>
             {{ file.name }} - {{ formatSize(file.length) }}
           </li>
         </ul>

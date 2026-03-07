@@ -8,7 +8,7 @@ import { contextBridge, ipcRenderer } from 'electron';
       },
       torrent: {
         addFile: (savePath: string) => ipcRenderer.invoke('torrent:add-file', savePath),
-        addMagnet: (uri: string, savePath: string) => ipcRenderer.invoke('torrent:add-magnet', uri,savePath),
+        addMagnet: (uri: string, savePath: string, selectedFiles?: string[]) => ipcRenderer.invoke('torrent:add-magnet', uri,savePath, selectedFiles),
         peekFiles: (uri: string) =>ipcRenderer.invoke('torrent:peek-files', uri),
         list: () => ipcRenderer.invoke('torrent:list'),
         pause: (infoHash: string) => ipcRenderer.invoke('torrent:pause', infoHash),

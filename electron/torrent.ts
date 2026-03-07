@@ -67,6 +67,7 @@ export function toTorrentInfo(t: any) {
     : (meta?.files || []),
     addedAt: meta?.addedAt ?? Date.now(),
     timeRemaining: isPaused ? 0 :t.timeRemaining,
+    selectedFiles: meta?.selectedFiles
   }
 }
 
@@ -139,7 +140,7 @@ export function registerTorrentHandlers() {
   ipcMain.handle('torrent:add-magnet', async (_event, uri: string, savePath: string, selectedFiles?: string[]) => {
     const addedAt = Date.now()
     const resolvedPath = savePath || loadSettings().downloadPath
-    const info = await addTorrentPaused(uri, resolvedPath, addedAt)
+    const info = await addTorrentPaused(uri, resolvedPath, addedAt, selectedFiles)
 
     const stored = loadStoredTorrents()
     stored.push({ 
@@ -267,7 +268,8 @@ export function populateFromStoredTorrents(entries: StoredTorrent[]) {
       name: entry.name,
       totalSize: entry.totalSize,
       files: entry.files,
-      progress: entry.progress
+      progress: entry.progress,
+      selectedFiles: entry.selectedFiles
     })
     pausedTorrentsInfo.set(entry.infoHash, {
       infoHash: entry.infoHash,
@@ -280,7 +282,8 @@ export function populateFromStoredTorrents(entries: StoredTorrent[]) {
       status: entry.progress === 1 ? 'seeding' : 'paused',
       files: entry.files,
       addedAt: entry.addedAt,
-      timeRemaining: 0
+      timeRemaining: 0,
+      selectedFiles: entry.selectedFiles
     })
   }
 }
