@@ -34,6 +34,12 @@ jobs:
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release/**/*
+          files: |
+            release/**/*.AppImage
+            release/**/*.deb
+            release/**/*.exe
+            release/**/*.blockmap
+            release/**/*.yml
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
