@@ -19,6 +19,11 @@ declare global {
         get: () => Promise<{downloadPath: string, ytsApiUrl: string}>,
         set: (s: {downloadPath: string, ytsApiUrl: string}) => Promise<void>,
         chooseFolder: () => Promise<string | null>
+      },
+      updater: {
+        onUpdateAvailable: (cb: (version: string) => void) => void
+        onUpdateDownloaded: (cb: () => void) => void
+        install: () => void
       }
     }
   }

@@ -22,7 +22,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -37,9 +37,10 @@ jobs:
           files: |
             release/**/*.AppImage
             release/**/*.deb
-            release/**/*.exe
-            release/**/*.blockmap
-            release/**/*.yml
+            release/**/*Setup*.exe
+            release/**/*Setup*.exe.blockmap
+            release/**/latest*.yml
+            release/**/app-update.yml
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
