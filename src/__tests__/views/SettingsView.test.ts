@@ -25,6 +25,6 @@ describe('SettingsView', () => {
     await wrapper.vm.$nextTick()
     await wrapper.find('button.is-primary').trigger('click')
     expect(vi.mocked(window.electronAPI.settings.set))
-      .toHaveBeenCalledWith({ downloadPath: '/downloads', ytsApiUrl: 'http://fake-api' })
+      .toHaveBeenCalledWith({ downloadPath: '/downloads', ytsApiUrl: 'http://fake-api', trackers: ['udp://tracker.opentrackr.org:1337/announce'] })
   })
 })

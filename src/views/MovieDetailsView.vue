@@ -135,18 +135,7 @@
   import { getMovieDetails } from '../services/yts';
   import type { Movie } from '../types/movie';
 
-  const trackers = [
-    'udp://tracker.opentrackr.org:1337/announce,',
-    'udp://tracker.torrent.eu.org:451/announce',
-    'udp://tracker.dler.org:6969/announce',
-    'udp://open.stealth.si:80/announce',
-    'udp://open.demonii.com:1337/announce',
-    'https://tracker.moeblog.cn:443/announce',
-    'udp://open.dstud.io:6969/announce',
-    'udp://tracker.srv00.com:6969/announce',
-    'https://tracker.zhuqiy.com:443/announce',
-    'https://tracker.pmman.tech:443/announce',
-  ]
+  const trackers = ref<string[]>([])
 
   const showFilesModal = ref(false)
   const pendingMagnet = ref('')
@@ -165,7 +154,7 @@
 
   async function addTorrent(hash: string, quality: string, type: string) {
     const dn = encodeURIComponent(movie.value?.title ?? '')
-    const trackerParams = trackers.map(t => `tr=${encodeURIComponent(t)}`).join('&')
+    const trackerParams = trackers.value.map(t => `tr=${encodeURIComponent(t)}`).join('&')
     pendingMagnet.value = `magnet:?xt=urn:btih:${hash}&dn=${dn}&${trackerParams}`
     pendingHash.value = hash
     pendingQuality.value = quality
@@ -191,6 +180,7 @@
     const s = await window.electronAPI.settings.get()
     const ytsApiUrl = s.ytsApiUrl
     downloadPath.value = s.downloadPath
+    trackers.value = s.trackers ?? []
 
     const torrents = await window.electronAPI.torrent.list()
     existingHashes.value = torrents.map((t: any) => t.infoHash.toLowerCase())
