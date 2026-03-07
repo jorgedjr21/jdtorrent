@@ -1,7 +1,7 @@
 <template>
   <div class="details-layout">
     <div v-if="loading" class="has-text-centered mt-6">
-      <p class="has-text-grey">Carregando...</p>
+      <p class="has-text-grey">{{ $t('movieDetails.loading') }}</p>
     </div>
 
     <div v-else-if="error" class="has-text-centered mt-6">
@@ -19,7 +19,7 @@
       <div class="details-body">
         <div class="mb-4" style="position: relative;">
           <button class="button is-small" @click="router.go(-1)">
-            ← Voltar para Filmes
+            {{ $t('movieDetails.back') }}
           </button>
         </div>
          <div class="details-top">
@@ -65,7 +65,7 @@
           </p>
 
           <div>
-            <p class="is-size-7 has-text-weight-bold mb-2">Torrents</p>
+            <p class="is-size-7 has-text-weight-bold mb-2">{{ $t('movieDetails.torrents') }}</p>
             <div class="is-flex is-flex-wrap-wrap" style="gap: 0.5rem;">
               <button
                 v-for="torrent in movie.torrents"
@@ -76,8 +76,7 @@
                   'torrent-added': existingHashes.includes(torrent.hash.toLowerCase())
                 }"
                 :disabled="loadingTorrent !== '' || existingHashes.includes(torrent.hash.toLowerCase())"
-                :data-tooltip="existingHashes.includes(torrent.hash.toLowerCase()) ? 'Já adicionado para download' :
-              undefined"
+                :data-tooltip="existingHashes.includes(torrent.hash.toLowerCase()) ? $t('movieDetails.alreadyAdded') : undefined"
                 @click="addTorrent(torrent.hash, torrent.quality, torrent.type)"
               >
                 <span v-if="loadingTorrent === torrent.hash" class="icon is-small mr-1">
@@ -90,7 +89,7 @@
         </div>
 
         <div v-if="movie.cast && movie.cast.length" class="mt-5">
-          <h2 class="title is-6 mb-3">Elenco</h2>
+          <h2 class="title is-6 mb-3">{{ $t('movieDetails.cast') }}</h2>
 
           <div class="cast-grid">
             <div v-for="member in movie.cast" :key="member.imdb_code" class="cast-card">
@@ -130,10 +129,12 @@
 
 <script setup lang="ts">
   import TorrentFilesModal from '../components/TorrentFilesModal.vue';
-  import {ref, onMounted } from 'vue'
+  import { ref, onMounted } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { useRoute, useRouter } from 'vue-router';
   import { getMovieDetails } from '../services/yts';
   import type { Movie } from '../types/movie';
+  const { t } = useI18n()
 
   const trackers = ref<string[]>([])
 
@@ -168,7 +169,7 @@
     try {
       await window.electronAPI.torrent.addMagnet(pendingMagnet.value, downloadPath.value, selectedFiles)
       existingHashes.value.push(pendingHash.value.toLowerCase())
-      addedFeedback.value = `${pendingQuality.value} ${pendingType.value} adicionado!`
+      addedFeedback.value = t('movieDetails.added', { quality: pendingQuality.value, type: pendingType.value })
       setTimeout(() => { addedFeedback.value = '' }, 3000)
     } finally {
       loadingTorrent.value = ''
@@ -189,7 +190,7 @@
       const data = await getMovieDetails(Number(route.params.id), ytsApiUrl)
       movie.value = data.movie
     } catch (e: any) {
-      error.value = 'Erro ao carregar detalhes do filme'
+      error.value = t('movieDetails.error')
       console.error(e)
     } finally {
       loading.value = false

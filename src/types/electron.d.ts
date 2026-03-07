@@ -17,8 +17,8 @@ declare global {
         remove: (infoHash: string, deleteFiles: boolean) => Promise<void>
       },
       settings: {
-        get: () => Promise<{downloadPath: string, ytsApiUrl: string, trackers: string[]}>,
-        set: (s: {downloadPath: string, ytsApiUrl: string, trackers: string[]}) => Promise<void>,
+        get: () => Promise<{downloadPath: string, ytsApiUrl: string, trackers: string[], locale: string}>,
+        set: (s: {downloadPath: string, ytsApiUrl: string, trackers: string[], locale: string}) => Promise<void>,
         chooseFolder: () => Promise<string | null>
       },
       updater: {

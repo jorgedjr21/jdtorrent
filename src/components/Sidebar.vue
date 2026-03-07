@@ -19,19 +19,19 @@
         :class="{ 'is-active': route.path.startsWith('/movies') }"
       >
         <span class="icon"><font-awesome-icon icon="film" /></span>
-        <span>Filmes</span>
+        <span>{{ $t('nav.movies') }}</span>
       </router-link>
     </nav>
 
     <div class="sidebar-bottom">
       <router-link to="/settings" class="sidebar-item" active-class="is-active">
         <span class="icon"><font-awesome-icon icon="gear" /></span>
-        <span>Configurações</span>
+        <span>{{ $t('nav.settings') }}</span>
       </router-link>
 
       <button class="sidebar-item sidebar-logout" @click="electronAPI.app.quit()">
         <span class="icon"><font-awesome-icon icon="power-off" /></span>
-        <span>Sair</span>
+        <span>{{ $t('nav.quit') }}</span>
       </button>
 
       <div class="sidebar-version">v{{ appVersion }} · {{ commitHash }}</div>

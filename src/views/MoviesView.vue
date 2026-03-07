@@ -2,7 +2,7 @@
   <div class="movies-layout">
     <div class="movies-header">
       <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
-        <h1 class="title is-5 mb-0">Filmes</h1>
+        <h1 class="title is-5 mb-0">{{ $t('movies.title') }}</h1>
       </div>
 
       <div class="field has-addons mb-4 search-sticky">
@@ -11,7 +11,7 @@
             v-model="searchInput"
             type="text"
             class="input"
-            placeholder="Buscar Filme por título..."
+            :placeholder="$t('movies.searchPlaceholder')"
             @keyup.enter="search"
           />
         </div>
@@ -46,7 +46,7 @@
       </div>
 
       <div v-else-if="movies.length === 0" class="has-text-centered mt-6">
-        <p class="is-size-4 has-text-grey">Nenhum filme encontrado</p>
+        <p class="is-size-4 has-text-grey">{{ $t('movies.empty') }}</p>
       </div>
 
       <div v-else class="movies-grid">
@@ -83,16 +83,18 @@
       </div>
 
       <div v-if="totalPages" class="is-flex is-justify-content-center is-align-items-center mt-5" style="gap: 1rem;">
-        <button class="button is-small" :disabled="page === 1" @click="changePage(page - 1)">Anterior</button>
-        <span class="has-text-grey is-size-7">Página {{ page }} de {{ totalPages }}</span>
-        <button class="button is-small" :disabled="page === totalPages" @click="changePage(page + 1)">Próxima</button>
+        <button class="button is-small" :disabled="page === 1" @click="changePage(page - 1)">{{ $t('movies.prev') }}</button>
+        <span class="has-text-grey is-size-7">{{ $t('movies.page', { page, total: totalPages }) }}</span>
+        <button class="button is-small" :disabled="page === totalPages" @click="changePage(page + 1)">{{ $t('movies.next') }}</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import {ref, onMounted } from 'vue'
+  import { ref, onMounted } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  const { t } = useI18n()
   import { listMovies } from '../services/yts';
   import type { Movie } from '../types/movie';
   import { useRouter } from 'vue-router';
@@ -122,7 +124,7 @@
       const moviesBody = document.querySelector('.movies-body')
       if(moviesBody) moviesBody.scrollTop = 0
     } catch (e: any) {
-      error.value = 'Erro ao carregar filmes'
+      error.value = t('movies.error')
       console.error(e)
     } finally {
       loading.value = false
