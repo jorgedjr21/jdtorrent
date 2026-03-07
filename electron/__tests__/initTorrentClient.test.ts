@@ -76,4 +76,25 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
       expect(info.numPeers).toBe(0)
       expect(info.timeRemaining).toBe(0)
     })
+
+    it('restores selectedFiles in torrentMeta when present', () => {
+      torrentMeta.clear()
+      pausedSet.clear()
+      pausedTorrentsInfo.clear()
+      populateFromStoredTorrents([{ ...incompleteTorrent, selectedFiles: ['witch.mkv'] }])
+      expect(torrentMeta.get('hash2')?.selectedFiles).toEqual(['witch.mkv'])
+    })
+
+    it('restores selectedFiles in pausedTorrentsInfo when present', () => {
+      torrentMeta.clear()
+      pausedSet.clear()
+      pausedTorrentsInfo.clear()
+      populateFromStoredTorrents([{ ...incompleteTorrent, selectedFiles: ['witch.mkv'] }])
+      expect(pausedTorrentsInfo.get('hash2')?.selectedFiles).toEqual(['witch.mkv'])
+    })
+
+    it('leaves selectedFiles undefined when not in stored torrent', () => {
+      expect(torrentMeta.get('hash1')?.selectedFiles).toBeUndefined()
+      expect(pausedTorrentsInfo.get('hash1')?.selectedFiles).toBeUndefined()
+    })
   })

@@ -5,6 +5,7 @@ window.electronAPI = {
   torrent: {
     addFile: vi.fn(),
     addMagnet: vi.fn(),
+    peekFiles: vi.fn().mockResolvedValue([]),
     list: vi.fn().mockResolvedValue([]),
     pause: vi.fn().mockResolvedValue(undefined),
     resume: vi.fn().mockResolvedValue(undefined),

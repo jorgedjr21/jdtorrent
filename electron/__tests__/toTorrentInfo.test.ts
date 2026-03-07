@@ -74,4 +74,15 @@ describe('toTorrentInfo', () => {
     const info = toTorrentInfo(mockTorrent({ progress: 0 }))
     expect(info.progress).toBe(0.5)
   })
+
+  it('returns selectedFiles from meta when present', () => {
+    torrentMeta.set('abc123', { ...mockMeta, selectedFiles: ['file.mkv'] })
+    const info = toTorrentInfo(mockTorrent())
+    expect(info.selectedFiles).toEqual(['file.mkv'])
+  })
+
+  it('returns undefined for selectedFiles when not set in meta', () => {
+    const info = toTorrentInfo(mockTorrent())
+    expect(info.selectedFiles).toBeUndefined()
+  })
 })
