@@ -26,6 +26,10 @@ function createWindow() {
     autoUpdater.checkForUpdates()
   }
 
+  autoUpdater.on('error', (err) => {
+    console.error('Auto updater error:', err)
+  })
+
   autoUpdater.on('update-available', (info) => {
     win.webContents.send('updater:update-available', info.version)
   })
