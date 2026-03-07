@@ -12,7 +12,8 @@ type StoredTorrent = {
   name: string
   totalSize: number
   files: { name: string, path: string, length: number}[]
-  progress: number
+  progress: number,
+  selectedFiles?: string[],
 }
 
 let client: any
@@ -38,7 +39,8 @@ export const torrentMeta = new Map<string, {
   name?: string
   totalSize?: number
   files?: { name:string, path: string, length: number }[]
-  progress?: number
+  progress?: number,
+  selectedFiles?: string[]
 }>()
 export const pausedSet = new Set<string>()
 export const pausedTorrentsInfo = new Map<string, any>()
@@ -68,7 +70,7 @@ export function toTorrentInfo(t: any) {
   }
 }
 
-function addTorrentPaused(source: string, savePath: string, addedAt: number): Promise<any> {
+function addTorrentPaused(source: string, savePath: string, addedAt: number, selectedFiles?: string[]): Promise<any> {
   return new Promise((resolve, reject) => {
     client.add(source, { path: savePath }, (torrent: any) => {
       torrent.on('error', reject)
@@ -78,7 +80,8 @@ function addTorrentPaused(source: string, savePath: string, addedAt: number): Pr
         name: torrent.name,
         totalSize: torrent.length,
         files: (torrent.files || []).map((f: any) => ({name: f.name, path: f.path, length: f.length})),
-        progress: torrent.progress
+        progress: torrent.progress,
+        selectedFiles: selectedFiles
       })
       pausedSet.add(infoHash)
       const info = toTorrentInfo(torrent)
@@ -133,7 +136,7 @@ export function registerTorrentHandlers() {
     return info
   })
 
-  ipcMain.handle('torrent:add-magnet', async (_event, uri: string, savePath: string) => {
+  ipcMain.handle('torrent:add-magnet', async (_event, uri: string, savePath: string, selectedFiles?: string[]) => {
     const addedAt = Date.now()
     const resolvedPath = savePath || loadSettings().downloadPath
     const info = await addTorrentPaused(uri, resolvedPath, addedAt)
@@ -147,7 +150,8 @@ export function registerTorrentHandlers() {
       name: info.name,
       totalSize: info.totalSize,
       files: info.files,
-      progress: info.progress 
+      progress: info.progress ,
+      selectedFiles
     })
     saveStoredTorrents(stored)
 
@@ -192,6 +196,11 @@ export function registerTorrentHandlers() {
       const alreadyActive = client.torrents.find((t: any) => t.infoHash === infoHash)
       if (!alreadyActive) {
         client.add(meta.magnetURI, { path: meta.savePath }, (torrent: any) => {
+          if (meta.selectedFiles && meta.selectedFiles.length > 0) {
+            torrent.files.forEach((f: any) => {
+              if (!meta.selectedFiles!.includes(f.name)) f.deselect()
+            })
+          }
           torrent.on('done', () => {
             const existingMeta = torrentMeta.get(infoHash)
             if (existingMeta) torrentMeta.set(infoHash, { ...existingMeta, progress: 1 })
@@ -222,6 +231,20 @@ export function registerTorrentHandlers() {
     torrentMeta.delete(infoHash)
 
     saveStoredTorrents(loadStoredTorrents().filter( s => s.infoHash !== infoHash))
+  })
+
+  ipcMain.handle('torrent:peek-files', async (_event, uri: string) => {
+    return new Promise((resolve, reject) => {
+      client.add(uri, (torrent: any) => {
+        torrent.on('error', reject)
+        const files = (torrent.files || []).map((f: any) => ({
+          name: f.name,
+          path: f.path,
+          length: f.length
+        }))
+        torrent.destroy({ destroyStore: false }, () => resolve(files))
+      })
+    })
   })
 }
 

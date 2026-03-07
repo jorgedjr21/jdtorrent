@@ -119,14 +119,26 @@
       </transition>
     </div>
   </div>
+
+  <TorrentFilesModal 
+    v-if="showFilesModal"
+    :magnetUri="pendingMagnet"
+    @close="showFilesModal = false"
+    @confim="confirmDownload"
+  />
 </template>
 
 <script setup lang="ts">
+  import TorrentFilesModal from '../components/TorrentFilesModal.vue';
   import {ref, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router';
   import { getMovieDetails } from '../services/yts';
   import type { Movie } from '../types/movie';
   
+  const showFilesModal = ref(false)
+  const pendingMagnet = ref('')
+  const pendingQuality = ref('')
+  const pendingType = ref('')
   const route = useRoute()
   const router = useRouter()
   const movie = ref<Movie | null>(null)
@@ -151,14 +163,22 @@
   ]
 
   async function addTorrent(hash: string, quality: string, type: string) {
-    loadingTorrent.value = hash
+    const dn = encodeURIComponent(movie.value?.title ?? '')
+    const trackerParams = trackers.map(t => `tr=${encodeURIComponent(t)}`).join('&')
+    pendingMagnet.value = `magnet:?xt=urn:btih:${hash}&dn=${dn}&${trackerParams}`
+    pendingQuality.value = quality
+    pendingType.value = type
+    showFilesModal.value = true
+  }
+
+   async function confirmDownload(selectedFiles: string[]) {
+    showFilesModal.value = false
+    loadingTorrent.value = pendingMagnet.value
     try {
-      const dn = encodeURIComponent(movie.value?.title ?? '')
-      const trackerParams = trackers.map(t => `tr=${encodeURIComponent(t)}`).join('&')
-      const magnet = `magnet:?xt=urn:btih:${hash}&dn=${dn}&${trackerParams}`
-      await window.electronAPI.torrent.addMagnet(magnet, downloadPath.value)
+      await window.electronAPI.torrent.addMagnet(pendingMagnet.value, downloadPath.value, selectedFiles)
+      const hash = pendingMagnet.value.match(/btih:([a-fA-F0-9]+)/i)?.[1] ?? ''
       existingHashes.value.push(hash.toLowerCase())
-      addedFeedback.value = `${quality} ${type} adicionado!`
+      addedFeedback.value = `${pendingQuality.value} ${pendingType.value} adicionado!`
       setTimeout(() => { addedFeedback.value = '' }, 3000)
     } finally {
       loadingTorrent.value = ''
