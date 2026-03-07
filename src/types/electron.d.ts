@@ -9,7 +9,7 @@ declare global {
       },
       torrent: {
         addFile: (savePath: string) => Promise<TorrentInfo | null>
-        addMagnet: (uri: string, savePath: string) => Promise<TorrentInfo>
+        addMagnet: (uri: string, savePath: string, selectedFiles?: string[]) => Promise<TorrentInfo>
         peekFiles: (uri: string) => Promise<{ name: string, path: string, length: number }[]>
         list: () => Promise<TorrentInfo[]>
         pause: (infoHash: string) => Promise<void>

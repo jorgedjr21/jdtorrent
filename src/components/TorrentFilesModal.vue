@@ -8,8 +8,11 @@
       </header>
 
       <section class="modal-card-body">
-        <div v-if="loading" class="has-text-centered py-4">
-          <p class="has-text-grey">Buscando arquivos do torrent...</p>
+        <div v-if="loading" class="has-text-centered py-5">
+          <span class="icon is-large has-text-info">
+            <font-awesome-icon icon="spinner" spin size="2x" />
+          </span>
+          <p class="has-text-grey mt-3">Buscando arquivos do torrent...</p>
         </div>
         <div v-else-if="error" class="has-text-danger">{{ error }}</div>
         <div v-else>

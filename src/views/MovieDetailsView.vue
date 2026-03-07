@@ -124,7 +124,7 @@
     v-if="showFilesModal"
     :magnetUri="pendingMagnet"
     @close="showFilesModal = false"
-    @confim="confirmDownload"
+    @confirm="confirmDownload"
   />
 </template>
 
@@ -175,7 +175,7 @@
     showFilesModal.value = false
     loadingTorrent.value = pendingMagnet.value
     try {
-      await window.electronAPI.torrent.addMagnet(pendingMagnet.value, downloadPath.value, selectedFiles)
+      await window.electronAPI.torrent.addMagnet(pendingMagnet.value, downloadPath.value, Array.from(selectedFiles))
       const hash = pendingMagnet.value.match(/btih:([a-fA-F0-9]+)/i)?.[1] ?? ''
       existingHashes.value.push(hash.toLowerCase())
       addedFeedback.value = `${pendingQuality.value} ${pendingType.value} adicionado!`
