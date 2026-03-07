@@ -31,7 +31,7 @@ function createWindow() {
   })
 
   autoUpdater.on('update-downloaded', () => {
-    win.webContents.send('updater:update-download')
+    win.webContents.send('updater:update-downloaded')
   })
 }
 
