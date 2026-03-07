@@ -9,15 +9,16 @@ declare global {
       },
       torrent: {
         addFile: (savePath: string) => Promise<TorrentInfo | null>
-        addMagnet: (uri: string, savePath: string) => Promise<TorrentInfo>
+        addMagnet: (uri: string, savePath: string, selectedFiles?: string[]) => Promise<TorrentInfo>
+        peekFiles: (uri: string) => Promise<{ name: string, path: string, length: number }[]>
         list: () => Promise<TorrentInfo[]>
         pause: (infoHash: string) => Promise<void>
         resume: (infoHash: string) => Promise<void>
         remove: (infoHash: string, deleteFiles: boolean) => Promise<void>
       },
       settings: {
-        get: () => Promise<{downloadPath: string, ytsApiUrl: string}>,
-        set: (s: {downloadPath: string, ytsApiUrl: string}) => Promise<void>,
+        get: () => Promise<{downloadPath: string, ytsApiUrl: string, trackers: string[]}>,
+        set: (s: {downloadPath: string, ytsApiUrl: string, trackers: string[]}) => Promise<void>,
         chooseFolder: () => Promise<string | null>
       },
       updater: {

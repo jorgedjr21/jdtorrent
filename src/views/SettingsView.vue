@@ -17,7 +17,15 @@
       <div class="field mt-4">
         <label class="label">URL da API YTS</label>
         <div class="control">
-          <input class="input" type="text" v-model="ytsApiUrl" />
+          <input v-model="ytsApiUrl" class="input" type="text" />
+        </div>
+      </div>
+
+      <div class="field mt-4">
+        <label class="label">Trackers</label>
+        <p class="help mb-2">Um tracker por linha</p>
+        <div class="control">
+          <textarea v-model="trackersText" class="textarea" rows="8" />
         </div>
       </div>
 
@@ -36,12 +44,14 @@
 
   const downloadPath = ref('')
   const ytsApiUrl = ref('')
+  const trackersText = ref('')
   const saved = ref(false)
 
   onMounted(async () => {
     const s = await window.electronAPI.settings.get()
     downloadPath.value = s.downloadPath
     ytsApiUrl.value = s.ytsApiUrl
+    trackersText.value = (s.trackers ?? []).join('\n')
   })
 
   async function chooseFolder() {
@@ -53,7 +63,8 @@
   }
 
   async function save() {
-    await window.electronAPI.settings.set({ downloadPath: downloadPath.value, ytsApiUrl: ytsApiUrl.value})
+    const trackers = trackersText.value.split('\n').map(t => t.trim()).filter(t => t.length > 0)
+    await window.electronAPI.settings.set({ downloadPath: downloadPath.value, ytsApiUrl: ytsApiUrl.value, trackers })
     saved.value = true
     setTimeout(() => { saved.value = false}, 3000)
   }

@@ -2,21 +2,37 @@ import { app, ipcMain, dialog } from 'electron'
 import path from 'path'
 import fs from 'fs'
 
-type AppSettings = { 
-  downloadPath: string 
+const DEFAULT_TRACKERS = [
+  'udp://tracker.opentrackr.org:1337/announce',
+  'udp://tracker.torrent.eu.org:451/announce',
+  'udp://tracker.dler.org:6969/announce',
+  'udp://open.stealth.si:80/announce',
+  'udp://open.demonii.com:1337/announce',
+  'https://tracker.moeblog.cn:443/announce',
+  'udp://open.dstud.io:6969/announce',
+  'udp://tracker.srv00.com:6969/announce',
+  'https://tracker.zhuqiy.com:443/announce',
+  'https://tracker.pmman.tech:443/announce',
+]
+
+type AppSettings = {
+  downloadPath: string
   ytsApiUrl: string
+  trackers: string[]
 }
 
 const getSettingsPath = () => path.join(app.getPath('appData'), 'settings.json')
 
 export function loadSettings(): AppSettings {
+  const defaults: AppSettings = {
+    downloadPath: app.getPath('downloads'),
+    ytsApiUrl: 'https://movies-api.accel.li/api/v2',
+    trackers: DEFAULT_TRACKERS,
+  }
   try {
-    return JSON.parse(fs.readFileSync(getSettingsPath(), 'utf-8'))
+    return { ...defaults, ...JSON.parse(fs.readFileSync(getSettingsPath(), 'utf-8')) }
   } catch {
-    return { 
-      downloadPath: app.getPath('downloads'),
-      ytsApiUrl: 'https://movies-api.accel.li/api/v2'
-    }
+    return defaults
   }
 }
 

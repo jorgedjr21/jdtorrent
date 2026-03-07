@@ -12,7 +12,8 @@ type StoredTorrent = {
   name: string
   totalSize: number
   files: { name: string, path: string, length: number}[]
-  progress: number
+  progress: number,
+  selectedFiles?: string[],
 }
 
 let client: any
@@ -38,10 +39,15 @@ export const torrentMeta = new Map<string, {
   name?: string
   totalSize?: number
   files?: { name:string, path: string, length: number }[]
-  progress?: number
+  progress?: number,
+  selectedFiles?: string[]
 }>()
 export const pausedSet = new Set<string>()
 export const pausedTorrentsInfo = new Map<string, any>()
+
+function mapFiles(files: any[]): { name: string; path: string; length: number }[] {
+  return (files || []).map((f) => ({ name: f.name, path: f.path, length: f.length }))
+}
 
 export function toTorrentInfo(t: any) {
   const meta = torrentMeta.get(t.infoHash)
@@ -60,15 +66,14 @@ export function toTorrentInfo(t: any) {
     uploadSpeed: isPaused ? 0 : t.uploadSpeed,
     numPeers: isPaused ? 0 : t.numPeers,
     status,
-    files:  (t.files?.length > 0)
-    ? t.files.map((f: any) => ({ name: f.name, path: f.path, length: f.length }))
-    : (meta?.files || []),
+    files: t.files?.length > 0 ? mapFiles(t.files) : (meta?.files || []),
     addedAt: meta?.addedAt ?? Date.now(),
-    timeRemaining: isPaused ? 0 :t.timeRemaining,
+    timeRemaining: isPaused ? 0 : t.timeRemaining,
+    selectedFiles: meta?.selectedFiles
   }
 }
 
-function addTorrentPaused(source: string, savePath: string, addedAt: number): Promise<any> {
+function addTorrentPaused(source: string, savePath: string, addedAt: number, selectedFiles?: string[]): Promise<any> {
   return new Promise((resolve, reject) => {
     client.add(source, { path: savePath }, (torrent: any) => {
       torrent.on('error', reject)
@@ -77,8 +82,9 @@ function addTorrentPaused(source: string, savePath: string, addedAt: number): Pr
         magnetURI, savePath, addedAt,
         name: torrent.name,
         totalSize: torrent.length,
-        files: (torrent.files || []).map((f: any) => ({name: f.name, path: f.path, length: f.length})),
-        progress: torrent.progress
+        files: mapFiles(torrent.files),
+        progress: torrent.progress,
+        selectedFiles: selectedFiles
       })
       pausedSet.add(infoHash)
       const info = toTorrentInfo(torrent)
@@ -99,7 +105,7 @@ export function deleteTorrentFiles(meta: { savePath: string, files?: { path: str
   } else {
     for (const file of meta.files) {
       const filePath = path.isAbsolute(file.path) ? file.path : path.join(meta.savePath, file.path)
-      try { fs.rmSync(filePath, { force: true }) } catch {}
+      try { fs.rmSync(filePath, { force: true }) } catch { /* file may not exist */ }
     }
   }
 }
@@ -133,10 +139,10 @@ export function registerTorrentHandlers() {
     return info
   })
 
-  ipcMain.handle('torrent:add-magnet', async (_event, uri: string, savePath: string) => {
+  ipcMain.handle('torrent:add-magnet', async (_event, uri: string, savePath: string, selectedFiles?: string[]) => {
     const addedAt = Date.now()
     const resolvedPath = savePath || loadSettings().downloadPath
-    const info = await addTorrentPaused(uri, resolvedPath, addedAt)
+    const info = await addTorrentPaused(uri, resolvedPath, addedAt, selectedFiles)
 
     const stored = loadStoredTorrents()
     stored.push({ 
@@ -147,7 +153,8 @@ export function registerTorrentHandlers() {
       name: info.name,
       totalSize: info.totalSize,
       files: info.files,
-      progress: info.progress 
+      progress: info.progress ,
+      selectedFiles
     })
     saveStoredTorrents(stored)
 
@@ -192,6 +199,11 @@ export function registerTorrentHandlers() {
       const alreadyActive = client.torrents.find((t: any) => t.infoHash === infoHash)
       if (!alreadyActive) {
         client.add(meta.magnetURI, { path: meta.savePath }, (torrent: any) => {
+          if (meta.selectedFiles && meta.selectedFiles.length > 0) {
+            torrent.files.forEach((f: any) => {
+              if (!meta.selectedFiles!.includes(f.name)) f.deselect()
+            })
+          }
           torrent.on('done', () => {
             const existingMeta = torrentMeta.get(infoHash)
             if (existingMeta) torrentMeta.set(infoHash, { ...existingMeta, progress: 1 })
@@ -223,6 +235,16 @@ export function registerTorrentHandlers() {
 
     saveStoredTorrents(loadStoredTorrents().filter( s => s.infoHash !== infoHash))
   })
+
+  ipcMain.handle('torrent:peek-files', async (_event, uri: string) => {
+    return new Promise((resolve, reject) => {
+      client.add(uri, (torrent: any) => {
+        torrent.on('error', reject)
+        const files = mapFiles(torrent.files)
+        torrent.destroy({ destroyStore: false }, () => resolve(files))
+      })
+    })
+  })
 }
 
 const dynamicImport = new Function('specifier', 'return import(specifier)') as (s: string) =>
@@ -244,7 +266,8 @@ export function populateFromStoredTorrents(entries: StoredTorrent[]) {
       name: entry.name,
       totalSize: entry.totalSize,
       files: entry.files,
-      progress: entry.progress
+      progress: entry.progress,
+      selectedFiles: entry.selectedFiles
     })
     pausedTorrentsInfo.set(entry.infoHash, {
       infoHash: entry.infoHash,
@@ -257,7 +280,8 @@ export function populateFromStoredTorrents(entries: StoredTorrent[]) {
       status: entry.progress === 1 ? 'seeding' : 'paused',
       files: entry.files,
       addedAt: entry.addedAt,
-      timeRemaining: 0
+      timeRemaining: 0,
+      selectedFiles: entry.selectedFiles
     })
   }
 }

@@ -107,7 +107,25 @@ downloadSpeed: 0, uploadSpeed: 0, numPeers: 0, files: [], addedAt: 0, timeRemain
     expect(buttons[1].attributes('disabled')).toBeUndefined()
   })
 
-  it('calls addMagnet and shows toast when torrent button is clicked', async () => {
+  it('opens TorrentFilesModal when torrent button is clicked', async () => {
+    vi.mocked(window.electronAPI.torrent.peekFiles).mockResolvedValue([
+      { name: 'movie.mp4', path: 'movie.mp4', length: 1_000_000_000 }
+    ])
+    const router = createTestRouter()
+    await router.push('/movies/123')
+    await router.isReady()
+    const wrapper = mount(MovieDetailsView, { global: { plugins: [router], stubs } })
+    await flushPromises()
+    await wrapper.findAll('button.torrent-btn')[0].trigger('click')
+    await flushPromises()
+    expect(wrapper.findComponent({ name: 'TorrentFilesModal' }).exists()).toBe(true)
+    expect(window.electronAPI.torrent.addMagnet).not.toHaveBeenCalled()
+  })
+
+  it('calls addMagnet and shows toast after confirming in TorrentFilesModal', async () => {
+    vi.mocked(window.electronAPI.torrent.peekFiles).mockResolvedValue([
+      { name: 'movie.mp4', path: 'movie.mp4', length: 1_000_000_000 }
+    ])
     vi.mocked(window.electronAPI.torrent.addMagnet).mockResolvedValue({} as any)
     const router = createTestRouter()
     await router.push('/movies/123')
@@ -116,9 +134,12 @@ downloadSpeed: 0, uploadSpeed: 0, numPeers: 0, files: [], addedAt: 0, timeRemain
     await flushPromises()
     await wrapper.findAll('button.torrent-btn')[0].trigger('click')
     await flushPromises()
+    await wrapper.findComponent({ name: 'TorrentFilesModal' }).vm.$emit('confirm', ['movie.mp4'])
+    await flushPromises()
     expect(window.electronAPI.torrent.addMagnet).toHaveBeenCalledWith(
       expect.stringContaining('magnet:?xt=urn:btih:abc'),
-      '/downloads'
+      '/downloads',
+      ['movie.mp4']
     )
     expect(wrapper.text()).toContain('1080p bluray adicionado!')
   })

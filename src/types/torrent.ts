@@ -16,4 +16,5 @@ export interface TorrentInfo {
   files: TorrentFile[]
   addedAt: number
   timeRemaining: number
+  selectedFiles?: string[]
 }

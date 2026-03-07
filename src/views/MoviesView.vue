@@ -8,10 +8,10 @@
       <div class="field has-addons mb-4 search-sticky">
         <div class="control is-expanded">
           <input
+            v-model="searchInput"
             type="text"
             class="input"
             placeholder="Buscar Filme por título..."
-            v-model="searchInput"
             @keyup.enter="search"
           />
         </div>
@@ -74,7 +74,7 @@
             </div>
 
             <div class="movie-genres mt-3">
-              <span v-for="genre in movie.genres?.slice(0,2)" class="tag is-dark is-small mr-1">
+              <span v-for="genre in movie.genres?.slice(0,2)" :key="genre" class="tag is-dark is-small mr-1">
                 {{ genre }}
               </span>
             </div>
