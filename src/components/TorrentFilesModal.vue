@@ -36,7 +36,7 @@
         <button
           class="button is-primary"
           :disabled="loading || selected.length === 0"
-          @click="$emit('confirm', selected)">
+          @click="$emit('confirm', [...selected])">
           {{ $t('filesModal.download') }}
         </button>
         <button class="button ml-2" @click="$emit('close')">{{ $t('filesModal.cancel') }}</button>
