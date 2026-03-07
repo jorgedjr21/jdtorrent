@@ -20,6 +20,11 @@
   "build": {
     "appId": "com.jdtorrent.app",
     "productName": "JDTorrent",
+    "publish": {
+      "provider": "github",
+      "owner": "jorgedjr21",
+      "repo": "jdtorrent"
+    },
     "asar": true,
     "asarUnpack": [
       "**/*.node"
