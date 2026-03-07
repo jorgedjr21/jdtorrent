@@ -18,6 +18,13 @@ import { contextBridge, ipcRenderer } from 'electron';
         get: () => ipcRenderer.invoke('settings:get'),
         set: (s: { downloadPath: string}) => ipcRenderer.invoke('settings:set', s),
         chooseFolder: () => ipcRenderer.invoke('settings:choose-folder')
+      },
+      updater: {
+        onUpdateAvailable: (cb: (version: string) => void) =>
+          ipcRenderer.on('updater:update-available', (_e, version) => cb(version)),
+        onUpdateDownloaded: (cb: () => void) =>
+          ipcRenderer.on('updater:update-downloaded', () => cb()),
+        install: () => ipcRenderer.send('updater:install')
       }
     });
     console.log('preload OK, ipcRenderer:', typeof ipcRenderer);

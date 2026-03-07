@@ -64,6 +64,7 @@ html, body, #app { height: 100%; }
 }
 
 .input, .textarea, .select select {
+  background-color: var(--bg-card) !important;
   border-color: var(--border) !important;
   color: var(--text-primary) !important;
 }

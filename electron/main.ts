@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, Menu } from 'electron'
 import path from 'path'
+import { autoUpdater } from 'electron-updater'
 import { registerSettingsHandlers } from './settings'
 import { registerTorrentHandlers, initTorrentClient } from './torrent'
 
@@ -22,7 +23,16 @@ function createWindow() {
   } else {
     Menu.setApplicationMenu(null)
     win.loadFile(path.join(__dirname, '../dist/index.html'))
+    autoUpdater.checkForUpdates()
   }
+
+  autoUpdater.on('update-available', (info) => {
+    win.webContents.send('updater:update-available', info.version)
+  })
+
+  autoUpdater.on('update-downloaded', () => {
+    win.webContents.send('updater:update-download')
+  })
 }
 
 app.whenReady().then(async () => {
@@ -33,6 +43,7 @@ app.whenReady().then(async () => {
 })
 
 ipcMain.handle('app:quit', () => app.quit())
+ipcMain.on('updater:install', () => autoUpdater.quitAndInstall())
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
