@@ -253,6 +253,9 @@ const dynamicImport = new Function('specifier', 'return import(specifier)') as (
 export async function initTorrentClient() {
   const { default: WebTorrent } = await dynamicImport('webtorrent')
   client = new WebTorrent()
+  client.on('error', (err: any) => {
+    console.error('WebTorrent error:', err)
+  })
   populateFromStoredTorrents(loadStoredTorrents())
 }
 
