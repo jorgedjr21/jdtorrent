@@ -3,7 +3,7 @@
     <div class="modal-background" @click="$emit('close')"></div>
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">Selecionar arquivos</p>
+        <p class="modal-card-title">{{ $t('filesModal.title') }}</p>
         <button class="delete" @click="$emit('close')"></button>
       </header>
 
@@ -12,14 +12,14 @@
           <span class="icon is-large has-text-info">
             <font-awesome-icon icon="spinner" spin size="2x" />
           </span>
-          <p class="has-text-grey mt-3">Buscando arquivos do torrent...</p>
+          <p class="has-text-grey mt-3">{{ $t('filesModal.loading') }}</p>
         </div>
         <div v-else-if="error" class="has-text-danger">{{ error }}</div>
         <div v-else>
-          <p class="is-size-7 has-text-grey mb-3">{{ files.length }} arquivo(s) encontrado(s)</p>
+          <p class="is-size-7 has-text-grey mb-3">{{ $t('filesModal.found', { n: files.length }) }}</p>
           <div class="is-flex is-justify-content-flex-end mb-2">
             <a class="is-size-7" style="cursor: pointer;" @click="toggleAll">
-              {{ selected.length === files.length ? 'Deselecionar todos' : 'Selecionar todos' }}
+              {{ selected.length === files.length ? $t('filesModal.deselectAll') : $t('filesModal.selectAll') }}
             </a>
           </div>
           <div v-for="file in files" :key="file.name" class="file-row">
@@ -37,9 +37,9 @@
           class="button is-primary"
           :disabled="loading || selected.length === 0"
           @click="$emit('confirm', selected)">
-          Baixar selecionados
+          {{ $t('filesModal.download') }}
         </button>
-        <button class="button ml-2" @click="$emit('close')">Cancelar</button>
+        <button class="button ml-2" @click="$emit('close')">{{ $t('filesModal.cancel') }}</button>
       </footer>
     </div>
   </div>
@@ -47,7 +47,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { formatSize } from '../utils/torrent'
+const { t } = useI18n()
 
 const props = defineProps<{ magnetUri: string }>()
 defineEmits<{ close: [], confirm: [selectedFiles: string[]] }>()
@@ -71,7 +73,7 @@ onMounted(async () => {
     files.value = await window.electronAPI.torrent.peekFiles(props.magnetUri)
     selected.value = files.value.map(f => f.name)
   } catch {
-    error.value = 'Erro ao buscar arquivos do torrent'
+    error.value = t('filesModal.error')
   } finally {
     loading.value = false
   }

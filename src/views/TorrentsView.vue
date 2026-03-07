@@ -4,23 +4,23 @@
       <h1 class="title is-5 mb-0">Torrents</h1>
       <button class="button is-primary is-small" @click="showModal = true">
         <span class="icon"><font-awesome-icon icon="plus"/></span>
-        <span>Adicionar torrent</span>
+        <span>{{ $t('torrents.add') }}</span>
       </button>
     </div>
 
     <div class="tabs mb-4">
       <ul>
         <li :class="{'is-active': filter === 'all'}">
-          <a @click="filter = 'all'">Todos ({{ torrents.length }})</a>
+          <a @click="filter = 'all'">{{ $t('torrents.tabs.all') }} ({{ torrents.length }})</a>
         </li>
         <li :class="{'is-active': filter === 'downloading'}">
-          <a @click="filter = 'downloading'">Baixando ({{ count('downloading') }})</a>
+          <a @click="filter = 'downloading'">{{ $t('torrents.tabs.downloading') }} ({{ count('downloading') }})</a>
         </li>
         <li :class="{'is-active': filter === 'seeding'}">
-          <a @click="filter = 'seeding'">Semeando ({{ count('seeding') }})</a>
+          <a @click="filter = 'seeding'">{{ $t('torrents.tabs.seeding') }} ({{ count('seeding') }})</a>
         </li>
         <li :class="{'is-active': filter === 'paused'}">
-          <a @click="filter = 'paused'">Pausado ({{ count('paused') }})</a>
+          <a @click="filter = 'paused'">{{ $t('torrents.tabs.paused') }} ({{ count('paused') }})</a>
         </li>
       </ul>
     </div>
@@ -29,13 +29,13 @@
       <span class="icon is-large has-text-grey-light">
         <font-awesome-icon icon="box-open" size="3x" />
       </span>
-      <p class="is-size-4 has-text-grey mt-3">Nenhum torrent aqui</p>
+      <p class="is-size-4 has-text-grey mt-3">{{ $t('torrents.empty') }}</p>
     </div>
 
     <div v-for="torrent in filteredTorrents" :key="torrent.infoHash" class="box mb-3" >
       <div class="is-flex is-justify-content-space-between is-align-items-center mb-3">
         <span class="has-text-weight-semibold">{{ torrent.name }}</span>
-        <span class="tag ml-2" :class="statusClass(torrent.status)"> {{ statusLabel(torrent.status) }} </span>
+        <span class="tag ml-2" :class="statusClass(torrent.status)"> {{ $t(`status.${torrent.status}`) }} </span>
       </div>
 
       <div class="progress-wrapper mb-2">
@@ -58,7 +58,7 @@
         </span>
         <span class="stat-item">
           <font-awesome-icon icon="users" class="mr-1" />
-          {{ torrent.numPeers }} peers
+          {{ torrent.numPeers }} {{ $t('torrents.peers') }}
         </span>
         <span class="stat-item">{{ formatSize(torrent.totalSize) }}</span>
         <span class="stat-item">
@@ -81,7 +81,7 @@
           <span class="icon">
             <font-awesome-icon :icon="torrent.status === 'paused' ? 'play' : 'pause'" />
           </span>
-          <span>{{ torrent.status === 'paused' ? 'Iniciar' : 'Pausar' }}</span>
+          <span>{{ torrent.status === 'paused' ? $t('torrents.start') : $t('torrents.pause') }}</span>
         </button>
 
         <div class="dropdown" :class="{ 'is-active': deleteMenuOpen === torrent.infoHash }">
@@ -94,10 +94,10 @@
           <div class="dropdown-menu">
             <div class="dropdown-content">
               <a class="dropdown-item" @click="deleteTorrent(torrent.infoHash, false)">
-                Deletar torrent
+                {{ $t('torrents.delete') }}
               </a>
               <a class="dropdown-item has-text-danger" @click="deleteTorrent(torrent.infoHash, true)">
-                Deletar torrent e arquivos
+                {{ $t('torrents.deleteWithFiles') }}
               </a>
             </div>
           </div>
@@ -106,10 +106,10 @@
 
       <details class="mt-3">
         <summary class="has-text-grey is-size-7 is-clickable">
-          {{ torrent.files.length }} arquivo(s)
+          {{ $t('torrents.files', { n: torrent.files.length }) }}
           <span v-if="torrent.selectedFiles && torrent.selectedFiles.length < torrent.files.length"
             class="tag is-warning is-light is-small ml-2">
-            {{ torrent.selectedFiles.length }} selecionado(s)
+            {{ $t('torrents.selected', { n: torrent.selectedFiles.length }) }}
           </span>
         </summary>
         <ul class="mt-2">
@@ -142,7 +142,7 @@
   import {ref, computed, onMounted, onUnmounted } from 'vue'
   import AddTorrentModal from '../components/AddTorrentModal.vue';
   import type { TorrentInfo } from '../types/torrent';
-  import { formatSpeed, formatSize, statusClass, statusLabel, formatDate } from '../utils/torrent';
+  import { formatSpeed, formatSize, statusClass, formatDate } from '../utils/torrent';
 
   type Filter = 'all' | 'downloading' | 'seeding' | 'paused'
 
