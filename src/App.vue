@@ -30,11 +30,11 @@ instalar</button>
     window.electronAPI.updater.onUpdateDownloaded(() => {
       updateDownloaded.value = true
     })
-
-    function installUpdate() {
-      window.electronAPI.updater.install()
-    }
   })
+  
+  function installUpdate() {
+    window.electronAPI.updater.install()
+  }
 </script>
 
 <style>
