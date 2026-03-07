@@ -23,8 +23,7 @@
             </a>
           </div>
           <div v-for="file in files" :key="file.name" class="file-row">
-            <label class="checkbox is-flex is-align-items-center" style="gap: 0.5rem; cursor:
-pointer;">
+            <label class="checkbox is-flex is-align-items-center" style="gap: 0.5rem; cursor: pointer;">
               <input type="checkbox" v-model="selected" :value="file.name" />
               <span class="file-name">{{ file.name }}</span>
               <span class="has-text-grey is-size-7 ml-auto">{{ formatSize(file.length) }}</span>
@@ -51,7 +50,7 @@ import { ref, onMounted } from 'vue'
 import { formatSize } from '../utils/torrent'
 
 const props = defineProps<{ magnetUri: string }>()
-const emit = defineEmits<{ close: [], confirm: [selectedFiles: string[]] }>()
+defineEmits<{ close: [], confirm: [selectedFiles: string[]] }>()
 
 const files = ref<{ name: string, path: string, length: number }[]>([])
 const selected = ref<string[]>([])

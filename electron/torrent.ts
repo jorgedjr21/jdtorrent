@@ -45,6 +45,10 @@ export const torrentMeta = new Map<string, {
 export const pausedSet = new Set<string>()
 export const pausedTorrentsInfo = new Map<string, any>()
 
+function mapFiles(files: any[]): { name: string; path: string; length: number }[] {
+  return (files || []).map((f) => ({ name: f.name, path: f.path, length: f.length }))
+}
+
 export function toTorrentInfo(t: any) {
   const meta = torrentMeta.get(t.infoHash)
   const isPaused = pausedSet.has(t.infoHash)
@@ -62,11 +66,9 @@ export function toTorrentInfo(t: any) {
     uploadSpeed: isPaused ? 0 : t.uploadSpeed,
     numPeers: isPaused ? 0 : t.numPeers,
     status,
-    files:  (t.files?.length > 0)
-    ? t.files.map((f: any) => ({ name: f.name, path: f.path, length: f.length }))
-    : (meta?.files || []),
+    files: t.files?.length > 0 ? mapFiles(t.files) : (meta?.files || []),
     addedAt: meta?.addedAt ?? Date.now(),
-    timeRemaining: isPaused ? 0 :t.timeRemaining,
+    timeRemaining: isPaused ? 0 : t.timeRemaining,
     selectedFiles: meta?.selectedFiles
   }
 }
@@ -80,7 +82,7 @@ function addTorrentPaused(source: string, savePath: string, addedAt: number, sel
         magnetURI, savePath, addedAt,
         name: torrent.name,
         totalSize: torrent.length,
-        files: (torrent.files || []).map((f: any) => ({name: f.name, path: f.path, length: f.length})),
+        files: mapFiles(torrent.files),
         progress: torrent.progress,
         selectedFiles: selectedFiles
       })
@@ -238,11 +240,7 @@ export function registerTorrentHandlers() {
     return new Promise((resolve, reject) => {
       client.add(uri, (torrent: any) => {
         torrent.on('error', reject)
-        const files = (torrent.files || []).map((f: any) => ({
-          name: f.name,
-          path: f.path,
-          length: f.length
-        }))
+        const files = mapFiles(torrent.files)
         torrent.destroy({ destroyStore: false }, () => resolve(files))
       })
     })

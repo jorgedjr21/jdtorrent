@@ -93,7 +93,7 @@
           <h2 class="title is-6 mb-3">Elenco</h2>
 
           <div class="cast-grid">
-            <div v-for="member in movie.cast" :key="member.imdb_code" class="card-card">
+            <div v-for="member in movie.cast" :key="member.imdb_code" class="cast-card">
               <img 
                 v-if="member.url_small_image"
                 :src="member.url_small_image"
@@ -134,21 +134,7 @@
   import { useRoute, useRouter } from 'vue-router';
   import { getMovieDetails } from '../services/yts';
   import type { Movie } from '../types/movie';
-  
-  const showFilesModal = ref(false)
-  const pendingMagnet = ref('')
-  const pendingQuality = ref('')
-  const pendingType = ref('')
-  const route = useRoute()
-  const router = useRouter()
-  const movie = ref<Movie | null>(null)
-  const loading = ref(false)
-  const error = ref('')
-  const ytsApiUrl = ref('')
-  const downloadPath = ref('')
-  const addedFeedback = ref('')
-  const loadingTorrent = ref('')
-  const existingHashes = ref<string[]>([])
+
   const trackers = [
     'udp://tracker.opentrackr.org:1337/announce,',
     'udp://tracker.torrent.eu.org:451/announce',
@@ -162,22 +148,37 @@
     'https://tracker.pmman.tech:443/announce',
   ]
 
+  const showFilesModal = ref(false)
+  const pendingMagnet = ref('')
+  const pendingHash = ref('')
+  const pendingQuality = ref('')
+  const pendingType = ref('')
+  const route = useRoute()
+  const router = useRouter()
+  const movie = ref<Movie | null>(null)
+  const loading = ref(false)
+  const error = ref('')
+  const downloadPath = ref('')
+  const addedFeedback = ref('')
+  const loadingTorrent = ref('')
+  const existingHashes = ref<string[]>([])
+
   async function addTorrent(hash: string, quality: string, type: string) {
     const dn = encodeURIComponent(movie.value?.title ?? '')
     const trackerParams = trackers.map(t => `tr=${encodeURIComponent(t)}`).join('&')
     pendingMagnet.value = `magnet:?xt=urn:btih:${hash}&dn=${dn}&${trackerParams}`
+    pendingHash.value = hash
     pendingQuality.value = quality
     pendingType.value = type
     showFilesModal.value = true
   }
 
-   async function confirmDownload(selectedFiles: string[]) {
+  async function confirmDownload(selectedFiles: string[]) {
     showFilesModal.value = false
-    loadingTorrent.value = pendingMagnet.value
+    loadingTorrent.value = pendingHash.value
     try {
-      await window.electronAPI.torrent.addMagnet(pendingMagnet.value, downloadPath.value, Array.from(selectedFiles))
-      const hash = pendingMagnet.value.match(/btih:([a-fA-F0-9]+)/i)?.[1] ?? ''
-      existingHashes.value.push(hash.toLowerCase())
+      await window.electronAPI.torrent.addMagnet(pendingMagnet.value, downloadPath.value, selectedFiles)
+      existingHashes.value.push(pendingHash.value.toLowerCase())
       addedFeedback.value = `${pendingQuality.value} ${pendingType.value} adicionado!`
       setTimeout(() => { addedFeedback.value = '' }, 3000)
     } finally {
@@ -188,14 +189,14 @@
   onMounted(async () => {
     loading.value = true
     const s = await window.electronAPI.settings.get()
-    ytsApiUrl.value = s.ytsApiUrl
+    const ytsApiUrl = s.ytsApiUrl
     downloadPath.value = s.downloadPath
 
     const torrents = await window.electronAPI.torrent.list()
     existingHashes.value = torrents.map((t: any) => t.infoHash.toLowerCase())
 
     try {
-      const data = await getMovieDetails(Number(route.params.id), ytsApiUrl.value)
+      const data = await getMovieDetails(Number(route.params.id), ytsApiUrl)
       movie.value = data.movie
     } catch (e: any) {
       error.value = 'Erro ao carregar detalhes do filme'
