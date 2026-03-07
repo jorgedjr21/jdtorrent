@@ -78,6 +78,7 @@
     "bulma": "^1.0.4",
     "electron-updater": "^6.8.3",
     "vue": "^3.5.25",
+    "vue-i18n": "^11.3.0",
     "vue-router": "^5.0.3",
     "webtorrent": "^2.8.5"
   },
