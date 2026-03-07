@@ -63,7 +63,7 @@
         <span class="stat-item">{{ formatSize(torrent.totalSize) }}</span>
         <span class="stat-item">
           <font-awesome-icon icon="clock" class="mr-1" />
-          {{  formatDate(torrent.addedAt) }}
+          {{ formatDate(torrent.addedAt) }}
         </span>
       </div>
 

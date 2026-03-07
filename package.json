@@ -14,7 +14,8 @@
     "build:win": "vite build && tsc -p electron/tsconfig.json && electron-builder --win --publish never",
     "build:linux": "vite build && tsc -p electron/tsconfig.json && electron-builder --linux --publish never",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "eslint ."
   },
   "build": {
     "appId": "com.jdtorrent.app",
@@ -76,6 +77,7 @@
     "webtorrent": "^2.8.5"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^24.10.1",
     "@types/webtorrent": "^0.110.1",
     "@vitejs/plugin-vue": "^6.0.2",
@@ -85,8 +87,12 @@
     "cross-env": "^10.1.0",
     "electron": "^40.6.1",
     "electron-builder": "^26.8.1",
+    "eslint": "^10.0.3",
+    "eslint-plugin-vue": "^10.8.0",
+    "globals": "^17.4.0",
     "jsdom": "^28.1.0",
     "typescript": "~5.9.3",
+    "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1",
     "vitest": "^4.0.18",
     "vue-tsc": "^3.1.5",

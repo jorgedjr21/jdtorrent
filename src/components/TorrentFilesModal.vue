@@ -24,7 +24,7 @@
           </div>
           <div v-for="file in files" :key="file.name" class="file-row">
             <label class="checkbox is-flex is-align-items-center" style="gap: 0.5rem; cursor: pointer;">
-              <input type="checkbox" v-model="selected" :value="file.name" />
+              <input v-model="selected" type="checkbox" :value="file.name" />
               <span class="file-name">{{ file.name }}</span>
               <span class="has-text-grey is-size-7 ml-auto">{{ formatSize(file.length) }}</span>
             </label>
@@ -70,7 +70,7 @@ onMounted(async () => {
   try {
     files.value = await window.electronAPI.torrent.peekFiles(props.magnetUri)
     selected.value = files.value.map(f => f.name)
-  } catch (e: any) {
+  } catch {
     error.value = 'Erro ao buscar arquivos do torrent'
   } finally {
     loading.value = false

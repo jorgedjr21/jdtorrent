@@ -122,7 +122,7 @@
 
   <TorrentFilesModal 
     v-if="showFilesModal"
-    :magnetUri="pendingMagnet"
+    :magnet-uri="pendingMagnet"
     @close="showFilesModal = false"
     @confirm="confirmDownload"
   />

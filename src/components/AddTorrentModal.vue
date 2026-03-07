@@ -32,8 +32,8 @@
             <label for="magnetLink" class="label">Magnet Link</label>
             <div class="control">
               <input 
-                type="text" 
                 v-model="magnetUri" 
+                type="text" 
                 class="input"
                 placeholder="magnet:?xt=urn:bit..."  
               />

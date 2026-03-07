@@ -105,7 +105,7 @@ export function deleteTorrentFiles(meta: { savePath: string, files?: { path: str
   } else {
     for (const file of meta.files) {
       const filePath = path.isAbsolute(file.path) ? file.path : path.join(meta.savePath, file.path)
-      try { fs.rmSync(filePath, { force: true }) } catch {}
+      try { fs.rmSync(filePath, { force: true }) } catch { /* file may not exist */ }
     }
   }
 }

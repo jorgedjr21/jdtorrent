@@ -17,7 +17,7 @@
       <div class="field mt-4">
         <label class="label">URL da API YTS</label>
         <div class="control">
-          <input class="input" type="text" v-model="ytsApiUrl" />
+          <input v-model="ytsApiUrl" class="input" type="text" />
         </div>
       </div>
 
