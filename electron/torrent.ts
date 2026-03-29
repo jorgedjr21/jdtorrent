@@ -2,7 +2,7 @@ import { ipcMain, dialog, app } from "electron";
 import path from 'path'
 import fs from 'fs'
 
-import { loadSettings } from "./settings";
+import { loadSettings } from './settings';
 
 type StoredTorrent = { 
   magnetURI: string 
@@ -50,17 +50,21 @@ function mapFiles(files: any[]): { name: string; path: string; length: number }[
 }
 
 function getPiecesMap(torrent: any, buckets = 200): number[] {
-  // Returns values: 0 = pending, 0.5 = in-progress, 1 = complete
-  // pieces[i] !== null means a Piece object exists (actively downloading)
-  // pieces[i] === null is ambiguous (not started OR complete), so we use
-  // the progress frontier to distinguish: before frontier = complete, after = pending
+  // pieces[i] === null  → complete
+  // pieces[i] !== null  → not complete (pending or downloading)
+  // wire.requests       → pieces actively being fetched from peers right now
   if (!torrent.pieces || torrent.pieces.length === 0) return []
   const total = torrent.pieces.length
-  const frontier = Math.round((torrent.progress || 0) * total)
+
+  const active = new Set<number>()
+  ;(torrent.wires || []).forEach((wire: any) => {
+    ;(wire.requests || []).forEach((req: any) => active.add(req.piece))
+  })
 
   const state = (i: number): number => {
-    if (torrent.pieces[i] !== null) return 0.5
-    return i < frontier ? 1 : 0
+    if (torrent.pieces[i] === null) return 1
+    if (active.has(i)) return 0.5
+    return 0
   }
 
   if (total <= buckets) return Array.from({ length: total }, (_, i) => state(i))
@@ -299,7 +303,8 @@ const dynamicImport = new Function('specifier', 'return import(specifier)') as (
 
 export async function initTorrentClient() {
   const { default: WebTorrent } = await dynamicImport('webtorrent')
-  client = new WebTorrent()
+  const { torrentPort } = loadSettings()
+  client = new WebTorrent(torrentPort ? { torrentPort } : {})
   client.on('error', (err: any) => {
     console.error('WebTorrent error:', err)
   })

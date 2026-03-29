@@ -20,6 +20,7 @@ type AppSettings = {
   ytsApiUrl: string
   trackers: string[]
   locale: string
+  torrentPort: number
 }
 
 const getSettingsPath = () => path.join(app.getPath('appData'), 'settings.json')
@@ -30,6 +31,7 @@ export function loadSettings(): AppSettings {
     ytsApiUrl: 'https://movies-api.accel.li/api/v2',
     trackers: DEFAULT_TRACKERS,
     locale: 'pt-BR',
+    torrentPort: 0,
   }
   try {
     return { ...defaults, ...JSON.parse(fs.readFileSync(getSettingsPath(), 'utf-8')) }

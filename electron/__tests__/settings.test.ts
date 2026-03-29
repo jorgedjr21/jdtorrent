@@ -32,7 +32,7 @@ describe('loadSettings', () => {
 
 describe('saveSettings', () => {
   it('writes the config to the json file', () => {
-    saveSettings({ downloadPath: '/new/path', ytsApiUrl: 'http://fake-api', trackers: [], locale: 'pt-BR' })
+    saveSettings({ downloadPath: '/new/path', ytsApiUrl: 'http://fake-api', trackers: [], locale: 'pt-BR', torrentPort: 0 })
     expect(mockWriteFileSync).toHaveBeenCalledWith(
       expect.stringContaining('settings.json'),
       expect.stringContaining('/new/path')
