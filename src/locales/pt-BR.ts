@@ -19,6 +19,7 @@ export default {
     deleteWithFiles: 'Deletar torrent e arquivos',
     files: '{n} arquivo(s)',
     selected: '{n} selecionado(s)',
+    pieces: 'peças',
     peers: 'peers',
     tabs: {
       all: 'Todos',
@@ -75,6 +76,8 @@ export default {
     trackers: 'Trackers',
     trackersHint: 'Um tracker por linha',
     language: 'Idioma',
+    torrentPort: 'Porta de download (VPN)',
+    torrentPortHint: 'Use 0 para porta automática. Requer reinício do app para ter efeito.',
     save: 'Salvar',
     saved: 'Configurações salvas!',
   },

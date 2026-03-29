@@ -58,6 +58,14 @@
       </div>
 
       <div class="field mt-4">
+        <label class="label">{{ $t('settings.torrentPort') }}</label>
+        <p class="help mb-2">{{ $t('settings.torrentPortHint') }}</p>
+        <div class="control" style="max-width: 160px;">
+          <input v-model.number="torrentPort" class="input" type="number" min="0" max="65535" />
+        </div>
+      </div>
+
+      <div class="field mt-4">
         <label class="label">{{ $t('settings.trackers') }}</label>
         <p class="help mb-2">{{ $t('settings.trackersHint') }}</p>
         <div class="control">
@@ -85,6 +93,7 @@
   const downloadPath = ref('')
   const ytsApiUrl = ref('')
   const trackersText = ref('')
+  const torrentPort = ref(0)
   const saved = ref(false)
 
   watch(locale, (val) => {
@@ -96,6 +105,7 @@
     downloadPath.value = s.downloadPath
     ytsApiUrl.value = s.ytsApiUrl
     trackersText.value = (s.trackers ?? []).join('\n')
+    torrentPort.value = s.torrentPort ?? 0
     locale.value = s.locale ?? 'pt-BR'
   })
 
@@ -114,6 +124,7 @@
       ytsApiUrl: ytsApiUrl.value,
       trackers,
       locale: locale.value,
+      torrentPort: torrentPort.value,
     })
     saved.value = true
     setTimeout(() => { saved.value = false }, 3000)
