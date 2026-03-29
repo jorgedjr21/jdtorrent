@@ -8,8 +8,9 @@ Cliente de torrent desktop construído com Electron, Vue 3 e TypeScript.
 - Pausar e retomar downloads
 - Selecionar arquivos individuais antes de baixar
 - Visualizar progresso, velocidade de download/upload e peers em tempo real
+- Mapa de peças em tempo real (completas, baixando, pendentes)
 - Filtrar torrents por status (Todos, Baixando, Semeando, Pausado)
-- Configurar pasta de destino, URL da API YTS e trackers
+- Configurar pasta de destino, URL da API YTS, trackers e porta de download (VPN)
 - Torrents persistidos entre sessões
 - Descoberta de filmes via API YTS com trailer, screenshots e elenco
 - Auto-update via GitHub Releases
@@ -67,12 +68,12 @@ electron/
   main.ts        # Lifecycle do Electron, janela e auto-updater
   preload.ts     # contextBridge — expõe electronAPI ao renderer
   torrent.ts     # Lógica WebTorrent (add, pause, resume, remove, peek)
-  settings.ts    # Configurações (downloadPath, ytsApiUrl, trackers, locale)
+  settings.ts    # Configurações (downloadPath, ytsApiUrl, trackers, locale, torrentPort)
   __tests__/     # Testes unitários do processo principal
 
 src/
   views/
-    TorrentsView.vue      # Listagem e controle de torrents (polling 2s)
+    TorrentsView.vue      # Listagem e controle de torrents (polling 500ms)
     SettingsView.vue      # Configurações do app
     MoviesView.vue        # Busca de filmes via YTS
     MovieDetailsView.vue  # Detalhes do filme e download por qualidade
