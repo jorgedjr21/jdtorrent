@@ -46,6 +46,16 @@
         ></div>
         <span class="progress-label">{{ (torrent.progress * 100).toFixed(2) }}%</span>
       </div>
+
+      <div v-if="torrent.piecesMap && torrent.piecesMap.length > 0" class="pieces-map-wrapper mb-2">
+        <span class="pieces-map-label">{{ $t('torrents.pieces') }}</span>
+        <div
+          class="pieces-map"
+          :class="torrent.status === 'seeding' ? 'is-seeding' : ''"
+          :style="{ backgroundImage: piecesGradient(torrent.piecesMap, torrent.status) }"
+          title="Mapa de peças: azul = completa, ciano = baixando, cinza = pendente"
+        ></div>
+      </div>
       
       <div class="is-flex is-flex-wrap-wrap stats-row">
         <span class="stat-item">
@@ -181,6 +191,33 @@
     }
   }
 
+  function piecesGradient(piecesMap: number[], status: string): string {
+    // 3 states: 0 = pending (gray), 0.5 = in-progress (cyan), 1 = complete (blue/green)
+    const complete = status === 'seeding' ? '#48c774' : '#3273dc'
+    const active   = '#5bc8f5'
+    const pending  = '#e0e6f0'
+
+    const colorOf = (v: number) => v >= 0.75 ? complete : v >= 0.25 ? active : pending
+
+    const n = piecesMap.length
+    const stops: string[] = []
+    let currentColor = ''
+    let startPct = 0
+
+    for (let i = 0; i <= n; i++) {
+      const color = i < n ? colorOf(piecesMap[i]) : ''
+      if (color !== currentColor) {
+        if (currentColor) {
+          stops.push(`${currentColor} ${startPct.toFixed(1)}% ${(i / n * 100).toFixed(1)}%`)
+        }
+        currentColor = color
+        startPct = i / n * 100
+      }
+    }
+
+    return `linear-gradient(to right, ${stops.join(', ')})`
+  }
+
   async function deleteTorrent(infoHash: string, deleteFiles: boolean) {
     deleteMenuOpen.value = ''
     await window.electronAPI.torrent.remove(infoHash, deleteFiles)
@@ -189,7 +226,7 @@
 
   onMounted(() => {
     fetchTorrents()
-    interval = setInterval(fetchTorrents, 2000)
+    interval = setInterval(fetchTorrents, 500)
     document.addEventListener('click', closeDeleteMenu)
   })
 
@@ -226,6 +263,28 @@
 
   .progress-fill.is-info { background-color: #3273dc; }
   .progress-fill.is-success { background-color: #48c774; }
+
+  .pieces-map-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .pieces-map-label {
+    font-size: 0.6rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .pieces-map {
+    flex: 1;
+    height: 8px;
+    border-radius: 3px;
+    background-color: #e0e6f0;
+  }
 
   .progress-label {
     position: absolute;

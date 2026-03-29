@@ -49,11 +49,51 @@ function mapFiles(files: any[]): { name: string; path: string; length: number }[
   return (files || []).map((f) => ({ name: f.name, path: f.path, length: f.length }))
 }
 
+function getPiecesMap(torrent: any, buckets = 200): number[] {
+  // Returns values: 0 = pending, 0.5 = in-progress, 1 = complete
+  // pieces[i] !== null means a Piece object exists (actively downloading)
+  // pieces[i] === null is ambiguous (not started OR complete), so we use
+  // the progress frontier to distinguish: before frontier = complete, after = pending
+  if (!torrent.pieces || torrent.pieces.length === 0) return []
+  const total = torrent.pieces.length
+  const frontier = Math.round((torrent.progress || 0) * total)
+
+  const state = (i: number): number => {
+    if (torrent.pieces[i] !== null) return 0.5
+    return i < frontier ? 1 : 0
+  }
+
+  if (total <= buckets) return Array.from({ length: total }, (_, i) => state(i))
+
+  const sums = new Array(buckets).fill(0)
+  const counts = new Array(buckets).fill(0)
+  const bucketSize = total / buckets
+
+  for (let i = 0; i < total; i++) {
+    const b = Math.min(Math.floor(i / bucketSize), buckets - 1)
+    counts[b]++
+    sums[b] += state(i)
+  }
+
+  return sums.map((s, i) => counts[i] > 0 ? s / counts[i] : 0)
+}
+
+function calculateProgress(torrent: any, selectedFiles?: string[]): number {
+  if (!selectedFiles || selectedFiles.length === 0 || !torrent.files?.length) {
+    return torrent.progress
+  }
+  const selected = torrent.files.filter((f: any) => selectedFiles.includes(f.name))
+  if (selected.length === 0) return torrent.progress
+  const totalBytes = selected.reduce((sum: number, f: any) => sum + f.length, 0)
+  const downloadedBytes = selected.reduce((sum: number, f: any) => sum + f.downloaded, 0)
+  return totalBytes > 0 ? downloadedBytes / totalBytes : 0
+}
+
 export function toTorrentInfo(t: any) {
   const meta = torrentMeta.get(t.infoHash)
   const isPaused = pausedSet.has(t.infoHash)
   let status: string
-  const progress = t.progress || meta?.progress || 0
+  const progress = meta?.progress === 1 ? 1 : (calculateProgress(t, meta?.selectedFiles) || meta?.progress || 0)
   if (isPaused) status = 'paused'
   else if (progress === 1) status = 'seeding'
   else status = 'downloading'
@@ -69,7 +109,8 @@ export function toTorrentInfo(t: any) {
     files: t.files?.length > 0 ? mapFiles(t.files) : (meta?.files || []),
     addedAt: meta?.addedAt ?? Date.now(),
     timeRemaining: isPaused ? 0 : t.timeRemaining,
-    selectedFiles: meta?.selectedFiles
+    selectedFiles: meta?.selectedFiles,
+    piecesMap: isPaused ? [] : getPiecesMap(t)
   }
 }
 
@@ -200,8 +241,14 @@ export function registerTorrentHandlers() {
       if (!alreadyActive) {
         client.add(meta.magnetURI, { path: meta.savePath }, (torrent: any) => {
           if (meta.selectedFiles && meta.selectedFiles.length > 0) {
+            // Deselect unwanted files first, then re-select wanted files.
+            // The re-select ensures boundary pieces shared between selected and
+            // deselected files stay in the download queue.
             torrent.files.forEach((f: any) => {
               if (!meta.selectedFiles!.includes(f.name)) f.deselect()
+            })
+            torrent.files.forEach((f: any) => {
+              if (meta.selectedFiles!.includes(f.name)) f.select()
             })
           }
           torrent.on('done', () => {

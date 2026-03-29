@@ -19,6 +19,7 @@ export default {
     deleteWithFiles: 'Deletar torrent e arquivos',
     files: '{n} arquivo(s)',
     selected: '{n} selecionado(s)',
+    pieces: 'peças',
     peers: 'peers',
     tabs: {
       all: 'Todos',
